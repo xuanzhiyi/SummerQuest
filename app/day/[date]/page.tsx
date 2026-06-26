@@ -18,6 +18,7 @@ export default async function DayPage({ params }: Props) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) notFound()
   if (date < PROGRAM_START || date > PROGRAM_END) notFound()
 
+
   // Child can only view today or past
   const role = session.user.role
   if (role === 'child' && date > new Date().toISOString().slice(0, 10)) {

@@ -1,7 +1,7 @@
 import sql from './db'
 import { scoreToEffortSignal, type DayTile, type EffortSignal } from '@/types'
 
-export const PROGRAM_START = '2026-06-29'
+export const PROGRAM_START = '2026-06-26'
 export const PROGRAM_END = '2026-08-12'
 
 export function programDates(): string[] {
