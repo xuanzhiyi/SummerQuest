@@ -8,6 +8,9 @@ export default async function HomePage() {
   const session = await auth()
   if (!session) redirect('/login')
 
+  // Viewer (grandparents) lands on progress page — more meaningful than empty calendar
+  if (session.user.role === 'viewer') redirect('/progress')
+
   const userId = parseInt(session.user.id)
   const tiles = await getCalendarTiles(userId)
 

@@ -25,11 +25,9 @@ export default function NavBar({ role, name }: Props) {
             </Link>
           </>
         )}
-        {(role === 'child' || role === 'admin') && (
-          <Link href="/progress" className="text-gray-500 hover:text-gray-800">
-            Progress
-          </Link>
-        )}
+        <Link href="/progress" className="text-gray-500 hover:text-gray-800">
+          Progress
+        </Link>
         <span className="text-gray-400">|</span>
         <span className="text-gray-500">{name}</span>
         <button
