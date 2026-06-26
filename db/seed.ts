@@ -34,7 +34,7 @@ async function seed() {
 
   console.log('✓ Seeded users')
   console.log('  Admin:    admin@summerquest.local / ', adminPassword)
-  console.log('  Child:    aleksi / PIN', childPin)
+  console.log('  Child:    hansen / PIN', childPin)
   console.log('  Viewer:   PIN', viewerPin)
 
   await sql.end()
