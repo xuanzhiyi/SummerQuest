@@ -190,7 +190,7 @@ export default function SettingsForm({ settings, thresholds }: Props) {
             <select
               value={newThreshold.track}
               onChange={(e) => setNewThreshold((p) => ({ ...p, track: e.target.value }))}
-              className="border border-gray-200 rounded-lg px-2 py-1.5 text-sm col-span-1"
+              className="border border-gray-200 rounded-lg px-2 py-1.5 text-sm text-gray-900 col-span-1"
             >
               {Object.entries(TRACK_LABELS).map(([k, v]) => (
                 <option key={k} value={k}>{v}</option>
@@ -202,7 +202,7 @@ export default function SettingsForm({ settings, thresholds }: Props) {
               onChange={(e) => setNewThreshold((p) => ({ ...p, pts: e.target.value }))}
               placeholder="Points"
               min={1}
-              className="border border-gray-200 rounded-lg px-2 py-1.5 text-sm"
+              className="border border-gray-200 rounded-lg px-2 py-1.5 text-sm text-gray-900"
             />
             <input
               type="text"
@@ -248,7 +248,7 @@ function SettingField({
           min={min} max={max} step={step}
           onChange={(e) => onChange(parseFloat(e.target.value))}
           onBlur={(e) => onBlur(parseFloat(e.target.value))}
-          className="w-full border border-gray-200 rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-amber-300"
+          className="w-full border border-gray-200 rounded-lg px-2 py-1 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-amber-300"
         />
         {saving && <span className="text-xs text-amber-400 shrink-0">…</span>}
         {saved && <span className="text-xs text-green-500 shrink-0">✓</span>}
