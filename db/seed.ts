@@ -22,7 +22,7 @@ async function seed() {
 
   await sql`
     INSERT INTO users (name, role, username, pin_hash)
-    VALUES ('Aleksi', 'child', 'aleksi', ${childHash})
+    VALUES ('Hansen', 'child', 'hansen', ${childHash})
     ON CONFLICT (username) DO NOTHING
   `
 
