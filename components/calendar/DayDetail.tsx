@@ -135,7 +135,7 @@ function TrackCard({
         onClick={onToggle}
         className="w-full flex items-center justify-between px-4 py-3 hover:bg-amber-50 transition-colors text-left"
       >
-        <span className="font-medium text-sm">{TRACK_LABELS[track]}</span>
+        <span className="font-medium text-sm text-gray-900">{TRACK_LABELS[track]}</span>
         <div className="flex items-center gap-2">
           {hasEntries && (
             <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
