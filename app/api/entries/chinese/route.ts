@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const { date, ai_generated_text, level_at_time } = await req.json()
+  const { date, ai_generated_text, level_at_time, audio_key } = await req.json()
   if (!date || !ai_generated_text || level_at_time == null) {
     return NextResponse.json({ error: 'Missing fields' }, { status: 400 })
   }
@@ -45,8 +45,8 @@ export async function POST(req: NextRequest) {
   const points = settings?.points_per_entry ?? 10
 
   const [entry] = await sql`
-    INSERT INTO entries_chinese (user_id, date, ai_generated_text, level_at_time, done, points_awarded)
-    VALUES (${userId}, ${date}, ${ai_generated_text}, ${level_at_time}, true, ${points})
+    INSERT INTO entries_chinese (user_id, date, ai_generated_text, level_at_time, done, points_awarded, audio_key)
+    VALUES (${userId}, ${date}, ${ai_generated_text}, ${level_at_time}, true, ${points}, ${audio_key ?? null})
     RETURNING *
   `
 

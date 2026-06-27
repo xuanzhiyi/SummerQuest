@@ -4,6 +4,8 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 const BUCKET = process.env.R2_BUCKET_NAME!
 const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5 MB
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp']
+const AUDIO_MAX_SIZE = 20 * 1024 * 1024 // 20 MB
+const AUDIO_TYPES = ['audio/webm', 'audio/mp4', 'audio/ogg', 'audio/mpeg', 'audio/wav']
 
 function getClient(): S3Client {
   return new S3Client({
@@ -33,6 +35,33 @@ export async function uploadImage(
       Key: key,
       Body: buffer,
       ContentType: contentType,
+    })
+  )
+
+  return key
+}
+
+export async function uploadAudio(
+  buffer: Buffer,
+  contentType: string,
+  track: string,
+  userId: number,
+  date: string
+): Promise<string> {
+  const normalised = contentType.split(';')[0].trim()
+  if (!AUDIO_TYPES.includes(normalised)) throw new Error('Invalid audio type')
+  if (buffer.length > AUDIO_MAX_SIZE) throw new Error('Audio too large (max 20 MB)')
+
+  const ext = normalised === 'audio/webm' ? 'webm' : normalised === 'audio/mp4' ? 'm4a' : normalised === 'audio/ogg' ? 'ogg' : 'audio'
+  const key = `reading/${track}/${userId}/${date}-${Date.now()}.${ext}`
+  const client = getClient()
+
+  await client.send(
+    new PutObjectCommand({
+      Bucket: BUCKET,
+      Key: key,
+      Body: buffer,
+      ContentType: normalised,
     })
   )
 
