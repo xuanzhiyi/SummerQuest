@@ -11,20 +11,20 @@ interface Props {
 }
 
 const TRACK_INFO: Record<string, { title: string; description: string }> = {
-  sport:          { title: '🏃 Sport',             description: 'Log your physical activity for today.' },
-  math:           { title: '🔢 Math',              description: 'Solve AI-generated math problems.' },
-  books:          { title: '📚 Books',             description: 'Log a book you read and answer a question.' },
-  english:        { title: '✍️ English writing',   description: 'Write a paragraph in English.' },
-  finnish:        { title: '🇫🇮 Finnish writing',   description: 'Write a paragraph in Finnish.' },
-  chinese:        { title: '🀄 Chinese reading',   description: 'Read an AI-generated Chinese text.' },
-  swedish:        { title: '🇸🇪 Swedish reading',   description: 'Read an AI-generated Swedish text.' },
-  french:         { title: '🇫🇷 French reading',    description: 'Read an AI-generated French text.' },
-  science:        { title: '🔬 Science',           description: 'Explore a science problem set.' },
-  ai_project:     { title: '🤖 AI Project',        description: 'Document your AI project with a screenshot.' },
-  word_english_finnish: { title: '🇫🇮 Word pairing — Finnish', description: 'Match English words to their Finnish translations.' },
-  word_english_chinese: { title: '🀄 Word pairing — Chinese', description: 'Match English words to their Chinese translations.' },
-  word_english_swedish: { title: '🇸🇪 Word pairing — Swedish', description: 'Match English words to their Swedish translations.' },
-  word_english_french:  { title: '🇫🇷 Word pairing — French',  description: 'Match English words to their French translations.' },
+  sport:          { title: '🏃 Sport / 运动',              description: 'Log your physical activity for today. / 记录今天的运动' },
+  math:           { title: '🔢 Math / 数学',               description: 'Solve AI-generated math problems. / 完成数学题' },
+  books:          { title: '📚 Books / 读书',              description: 'Log a book you read and answer a question. / 记录读书内容' },
+  english:        { title: '✍️ English / 英文写作',         description: 'Write a paragraph in English. / 用英语写一段话' },
+  finnish:        { title: '🇫🇮 Finnish / 芬兰语写作',      description: 'Write a paragraph in Finnish. / 用芬兰语写一段话' },
+  chinese:        { title: '🀄 Chinese / 中文阅读',         description: 'Read an AI-generated Chinese text. / 阅读中文文章' },
+  swedish:        { title: '🇸🇪 Swedish / 瑞典语',          description: 'Read an AI-generated Swedish text. / 阅读瑞典语文章' },
+  french:         { title: '🇫🇷 French / 法语',             description: 'Read an AI-generated French text. / 阅读法语文章' },
+  science:        { title: '🔬 Science / 科学',            description: 'Explore a science problem set. / 探索科学题' },
+  ai_project:     { title: '🤖 AI Project / AI项目',       description: 'Document your AI project. / 记录AI项目' },
+  word_english_finnish: { title: '🇫🇮 Finnish words / 芬兰单词', description: 'Match English–Finnish word pairs. / 配对英语和芬兰语单词' },
+  word_english_chinese: { title: '🀄 Chinese words / 中文单词', description: 'Match English–Chinese word pairs. / 配对英语和中文单词' },
+  word_english_swedish: { title: '🇸🇪 Swedish words / 瑞典单词', description: 'Match English–Swedish word pairs. / 配对英语和瑞典语单词' },
+  word_english_french:  { title: '🇫🇷 French words / 法语单词',  description: 'Match English–French word pairs. / 配对英语和法语单词' },
 }
 
 export default async function QuestPage({ params }: Props) {

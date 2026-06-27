@@ -12,20 +12,20 @@ interface Props {
 }
 
 const ALL_QUESTS = [
-  { track: 'sport',               title: '🏃 Sport',               bg: 'bg-orange-50 border-orange-200' },
-  { track: 'math',                title: '🔢 Math',                bg: 'bg-blue-50 border-blue-200' },
-  { track: 'books',               title: '📚 Books',               bg: 'bg-yellow-50 border-yellow-200' },
-  { track: 'chinese',             title: '🀄 Chinese reading',     bg: 'bg-red-50 border-red-200' },
-  { track: 'swedish',             title: '🇸🇪 Swedish reading',     bg: 'bg-sky-50 border-sky-200' },
-  { track: 'french',              title: '🇫🇷 French reading',      bg: 'bg-indigo-50 border-indigo-200' },
-  { track: 'word_english_finnish',title: '🇫🇮 Finnish words',       bg: 'bg-teal-50 border-teal-200' },
-  { track: 'word_english_chinese',title: '🀄 Chinese words',       bg: 'bg-rose-50 border-rose-200' },
-  { track: 'word_english_swedish',title: '🇸🇪 Swedish words',       bg: 'bg-cyan-50 border-cyan-200' },
-  { track: 'word_english_french', title: '🇫🇷 French words',        bg: 'bg-violet-50 border-violet-200' },
-  { track: 'english',             title: '✍️ English writing',      bg: 'bg-emerald-50 border-emerald-200' },
-  { track: 'finnish',             title: '🇫🇮 Finnish writing',      bg: 'bg-lime-50 border-lime-200' },
-  { track: 'science',             title: '🔬 Science',              bg: 'bg-purple-50 border-purple-200' },
-  { track: 'ai_project',          title: '🤖 AI Project',           bg: 'bg-pink-50 border-pink-200' },
+  { track: 'sport',               title: '🏃 Sport / 运动',               bg: 'bg-orange-50 border-orange-200' },
+  { track: 'math',                title: '🔢 Math / 数学',                bg: 'bg-blue-50 border-blue-200' },
+  { track: 'books',               title: '📚 Books / 读书',               bg: 'bg-yellow-50 border-yellow-200' },
+  { track: 'chinese',             title: '🀄 Chinese / 中文阅读',          bg: 'bg-red-50 border-red-200' },
+  { track: 'swedish',             title: '🇸🇪 Swedish / 瑞典语',           bg: 'bg-sky-50 border-sky-200' },
+  { track: 'french',              title: '🇫🇷 French / 法语',              bg: 'bg-indigo-50 border-indigo-200' },
+  { track: 'word_english_finnish',title: '🇫🇮 Finnish words / 芬兰单词',   bg: 'bg-teal-50 border-teal-200' },
+  { track: 'word_english_chinese',title: '🀄 Chinese words / 中文单词',    bg: 'bg-rose-50 border-rose-200' },
+  { track: 'word_english_swedish',title: '🇸🇪 Swedish words / 瑞典单词',   bg: 'bg-cyan-50 border-cyan-200' },
+  { track: 'word_english_french', title: '🇫🇷 French words / 法语单词',    bg: 'bg-violet-50 border-violet-200' },
+  { track: 'english',             title: '✍️ English / 英文写作',          bg: 'bg-emerald-50 border-emerald-200' },
+  { track: 'finnish',             title: '🇫🇮 Finnish / 芬兰语写作',        bg: 'bg-lime-50 border-lime-200' },
+  { track: 'science',             title: '🔬 Science / 科学',              bg: 'bg-purple-50 border-purple-200' },
+  { track: 'ai_project',          title: '🤖 AI Project / AI项目',         bg: 'bg-pink-50 border-pink-200' },
 ]
 
 function entryCount(track: string, entries: Record<string, unknown[]>): number {

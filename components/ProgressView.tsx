@@ -4,16 +4,20 @@ import { useState } from 'react'
 import type { TrackProgress } from '@/lib/progress'
 
 const TRACK_LABELS: Record<string, string> = {
-  sport:      '🏃 Sport',
-  math:       '🔢 Math',
-  books:      '📚 Books',
-  english:    '✍️ English',
-  finnish:    '🇫🇮 Finnish',
-  chinese:    '🀄 Chinese',
-  swedish:    '🇸🇪 Swedish',
-  french:     '🇫🇷 French',
-  science:    '🔬 Science',
-  ai_project: '🤖 AI Project',
+  sport:                '🏃 Sport / 运动',
+  math:                 '🔢 Math / 数学',
+  books:                '📚 Books / 读书',
+  english:              '✍️ English / 英文写作',
+  finnish:              '🇫🇮 Finnish / 芬兰语',
+  chinese:              '🀄 Chinese / 中文阅读',
+  swedish:              '🇸🇪 Swedish / 瑞典语',
+  french:               '🇫🇷 French / 法语',
+  science:              '🔬 Science / 科学',
+  ai_project:           '🤖 AI Project / AI项目',
+  word_english_finnish: '🇫🇮 Finnish words / 芬兰单词',
+  word_english_chinese: '🀄 Chinese words / 中文单词',
+  word_english_swedish: '🇸🇪 Swedish words / 瑞典单词',
+  word_english_french:  '🇫🇷 French words / 法语单词',
 }
 
 interface Props {
