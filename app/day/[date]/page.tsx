@@ -29,7 +29,7 @@ export default async function DayPage({ params }: Props) {
   let userId = parseInt(session.user.id)
   if (role === 'viewer') {
     const [child] = await sql`SELECT id FROM users WHERE role = 'child' LIMIT 1`
-    if (child) userId = child.id as number
+    if (child) userId = Number(child.id)
   }
   const canEdit = role === 'admin' || (role === 'child' && isToday(date))
 
