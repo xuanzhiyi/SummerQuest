@@ -75,7 +75,7 @@ export default function DayDetail({ date, entries, canEdit, role, dailyTargets }
               key={track}
               href={`/day/${date}/${track}`}
               className={`
-                relative flex flex-col gap-1.5 p-4 min-h-[96px] rounded-xl border-2 transition-all
+                relative flex flex-col gap-1.5 p-4 min-h-[115px] rounded-xl border-2 transition-all
                 hover:shadow-md active:scale-95
                 ${bg}
                 ${done ? 'opacity-90' : ''}
