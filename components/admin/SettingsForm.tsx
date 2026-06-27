@@ -3,16 +3,20 @@
 import { useState } from 'react'
 
 const TRACK_LABELS: Record<string, string> = {
-  sport:      '🏃 Sport',
-  math:       '🔢 Math',
-  books:      '📚 Books',
-  english:    '✍️ English',
-  finnish:    '🇫🇮 Finnish',
-  chinese:    '🀄 Chinese',
-  swedish:    '🇸🇪 Swedish',
-  french:     '🇫🇷 French',
-  science:    '🔬 Science',
-  ai_project: '🤖 AI Project',
+  sport:                '🏃 Sport',
+  math:                 '🔢 Math',
+  books:                '📚 Books',
+  english:              '✍️ English',
+  finnish:              '🇫🇮 Finnish',
+  chinese:              '🀄 Chinese',
+  swedish:              '🇸🇪 Swedish',
+  french:               '🇫🇷 French',
+  science:              '🔬 Science',
+  ai_project:           '🤖 AI Project',
+  word_english_finnish: '🇫🇮 Finnish words',
+  word_english_chinese: '🀄 Chinese words',
+  word_english_swedish: '🇸🇪 Swedish words',
+  word_english_french:  '🇫🇷 French words',
 }
 
 const AI_GRADED = new Set(['english', 'finnish', 'math', 'science'])
@@ -112,7 +116,7 @@ export default function SettingsForm({ settings, thresholds }: Props) {
         <div className="space-y-3">
           {rows.map((row) => (
             <div key={row.track} className="bg-white rounded-xl shadow-sm p-4">
-              <p className="font-medium mb-3">{TRACK_LABELS[row.track]}</p>
+              <p className="font-medium mb-3 text-gray-900">{TRACK_LABELS[row.track] ?? row.track}</p>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 {HAS_LEVEL.has(row.track) && (
                   <SettingField
@@ -162,7 +166,7 @@ export default function SettingsForm({ settings, thresholds }: Props) {
           )}
           {tRows.map((t) => (
             <div key={t.id} className="bg-white rounded-xl shadow-sm p-3 flex items-center gap-3">
-              <span className="text-sm font-medium w-24 shrink-0">{TRACK_LABELS[t.track]}</span>
+              <span className="text-sm font-medium w-24 shrink-0 text-gray-900">{TRACK_LABELS[t.track] ?? t.track}</span>
               <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full shrink-0">
                 {t.points_required} pts
               </span>
