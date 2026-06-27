@@ -16,64 +16,117 @@ function formatDuration(seconds: number) {
   return `${m}:${String(s).padStart(2, '0')}`
 }
 
+function formatSize(bytes: number) {
+  if (bytes < 1024) return `${bytes} B`
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+}
+
 export default function ReadingForm({ date, track, onSaved }: Props) {
   const [text, setText] = useState<string | null>(null)
   const [level, setLevel] = useState<number>(5)
   const [stage, setStage] = useState<Stage>('loading')
   const [error, setError] = useState('')
   const [audioUrl, setAudioUrl] = useState<string | null>(null)
-  const [duration, setDuration] = useState(0) // seconds elapsed while recording
+  const [duration, setDuration] = useState(0)
+  const [blobSize, setBlobSize] = useState(0)
+  const [audioLevel, setAudioLevel] = useState(0) // 0–100 for the meter
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
-  const chunksRef = useRef<BlobPart[]>([])
+  const chunksRef = useRef<Blob[]>([])
   const streamRef = useRef<MediaStream | null>(null)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const analyserRef = useRef<AnalyserNode | null>(null)
+  const levelRafRef = useRef<number | null>(null)
 
   useEffect(() => {
     fetch(`/api/entries/${track}`)
-      .then((r) => r.json())
-      .then((d) => {
+      .then(r => r.json())
+      .then(d => {
         if (d.text) { setText(d.text); setLevel(d.level); setStage('ready') }
         else setError(d.error ?? 'Could not load reading text')
       })
       .catch(() => setError('Could not load reading text'))
   }, [track])
 
-  // Cleanup timer on unmount
-  useEffect(() => () => { if (timerRef.current) clearInterval(timerRef.current) }, [])
+  useEffect(() => () => {
+    if (timerRef.current) clearInterval(timerRef.current)
+    if (levelRafRef.current) cancelAnimationFrame(levelRafRef.current)
+  }, [])
+
+  function startLevelMeter(stream: MediaStream) {
+    try {
+      const ctx = new AudioContext()
+      const src = ctx.createMediaStreamSource(stream)
+      const analyser = ctx.createAnalyser()
+      analyser.fftSize = 256
+      src.connect(analyser)
+      analyserRef.current = analyser
+      const data = new Uint8Array(analyser.frequencyBinCount)
+
+      function tick() {
+        analyser.getByteFrequencyData(data)
+        const avg = data.reduce((a, b) => a + b, 0) / data.length
+        setAudioLevel(Math.min(100, Math.round((avg / 128) * 100)))
+        levelRafRef.current = requestAnimationFrame(tick)
+      }
+      tick()
+    } catch {
+      // AnalyserNode not critical — ignore
+    }
+  }
+
+  function stopLevelMeter() {
+    if (levelRafRef.current) { cancelAnimationFrame(levelRafRef.current); levelRafRef.current = null }
+    setAudioLevel(0)
+  }
 
   async function startRecording() {
     setError('')
     setDuration(0)
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      streamRef.current = stream
-      chunksRef.current = []
+    setBlobSize(0)
+    chunksRef.current = []
 
-      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
-        ? 'audio/webm;codecs=opus'
-        : MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : ''
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false })
+      streamRef.current = stream
+
+      // Pick a supported mimeType
+      const mimeType = [
+        'audio/webm;codecs=opus',
+        'audio/webm',
+        'audio/ogg;codecs=opus',
+        'audio/mp4',
+      ].find(t => MediaRecorder.isTypeSupported(t)) ?? ''
 
       const mr = new MediaRecorder(stream, mimeType ? { mimeType } : undefined)
       mediaRecorderRef.current = mr
 
-      mr.ondataavailable = (e) => { if (e.data.size > 0) chunksRef.current.push(e.data) }
+      // Collect every chunk unconditionally — don't filter by size
+      mr.ondataavailable = (e) => {
+        chunksRef.current.push(e.data)
+      }
       mr.onstop = handleRecordingStopped
 
-      mr.start(250)
+      mr.start(500) // one chunk every 500 ms
       setStage('recording')
 
-      // Duration counter
+      startLevelMeter(stream)
       timerRef.current = setInterval(() => setDuration(d => d + 1), 1000)
     } catch {
-      setError('Microphone access denied. Please allow microphone and try again.')
+      setError('Microphone access denied. Please allow microphone access and try again.')
     }
   }
 
   function stopRecording() {
     if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null }
+    stopLevelMeter()
+    // Stop the recorder first; onstop fires after the final ondataavailable
     mediaRecorderRef.current?.stop()
-    streamRef.current?.getTracks().forEach((t) => t.stop())
+    // Stop mic tracks AFTER a short delay so the last chunk is flushed
+    setTimeout(() => {
+      streamRef.current?.getTracks().forEach(t => t.stop())
+    }, 300)
   }
 
   async function safeJson(res: Response): Promise<Record<string, unknown>> {
@@ -84,8 +137,17 @@ export default function ReadingForm({ date, track, onSaved }: Props) {
     setStage('uploading')
     setError('')
 
+    // Use the recorder's actual mimeType (may differ from what we requested)
     const mimeType = mediaRecorderRef.current?.mimeType ?? 'audio/webm'
     const blob = new Blob(chunksRef.current, { type: mimeType })
+    setBlobSize(blob.size)
+
+    if (blob.size < 500) {
+      setError('Recording appears to be empty — microphone may not be working. Please check your system microphone settings.')
+      setStage('ready')
+      return
+    }
+
     const localUrl = URL.createObjectURL(blob)
     setAudioUrl(localUrl)
 
@@ -129,6 +191,7 @@ export default function ReadingForm({ date, track, onSaved }: Props) {
     if (audioUrl) URL.revokeObjectURL(audioUrl)
     setAudioUrl(null)
     setDuration(0)
+    setBlobSize(0)
     setError('')
     setStage('ready')
   }
@@ -136,7 +199,6 @@ export default function ReadingForm({ date, track, onSaved }: Props) {
   if (stage === 'loading') {
     return <p className="pt-3 text-sm text-gray-400 animate-pulse">Loading reading text…</p>
   }
-
   if (error && !text) {
     return <p className="pt-3 text-sm text-red-500">{error}</p>
   }
@@ -148,9 +210,9 @@ export default function ReadingForm({ date, track, onSaved }: Props) {
         {text}
       </div>
 
-      {error && <p className="text-red-500 text-sm">{error}</p>}
+      {error && <p className="text-red-500 text-sm font-medium">{error}</p>}
 
-      {/* Stage: ready */}
+      {/* ready */}
       {stage === 'ready' && (
         <button
           onClick={startRecording}
@@ -160,22 +222,33 @@ export default function ReadingForm({ date, track, onSaved }: Props) {
         </button>
       )}
 
-      {/* Stage: recording */}
+      {/* recording */}
       {stage === 'recording' && (
         <div className="space-y-3">
-          {/* Recording indicator + timer */}
-          <div style={{ background: '#FEF2F2', borderRadius: 18, padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <span style={{ width: 12, height: 12, borderRadius: '50%', background: '#EF4444', display: 'inline-block', animation: 'pulse 1s ease-in-out infinite' }} />
-              <span style={{ color: '#DC2626', fontWeight: 800, fontSize: 14 }}>Recording…</span>
+          <div style={{ background: '#FEF2F2', borderRadius: 18, padding: '16px 20px' }}>
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <span style={{ width: 12, height: 12, borderRadius: '50%', background: '#EF4444', display: 'inline-block', animation: 'pulse 1s ease-in-out infinite' }} />
+                <span style={{ color: '#DC2626', fontWeight: 800, fontSize: 14 }}>Recording…</span>
+              </div>
+              <span style={{ fontFamily: "'Fredoka', sans-serif", fontSize: 24, fontWeight: 600, color: '#DC2626' }}>
+                {formatDuration(duration)}
+              </span>
             </div>
-            <span style={{ fontFamily: "'Fredoka', sans-serif", fontSize: 24, fontWeight: 600, color: '#DC2626' }}>
-              {formatDuration(duration)}
-            </span>
+            {/* Audio level meter */}
+            <div style={{ height: 8, background: '#FEE2E2', borderRadius: 999, overflow: 'hidden' }}>
+              <div style={{
+                height: '100%',
+                width: `${audioLevel}%`,
+                background: audioLevel > 20 ? '#10B981' : '#EF4444',
+                borderRadius: 999,
+                transition: 'width 0.1s',
+              }} />
+            </div>
+            <p style={{ fontSize: 11, color: '#9CA3AF', fontWeight: 600, marginTop: 4, textAlign: 'center' }}>
+              {audioLevel > 20 ? '🎙️ Mic is picking up sound' : '⚠️ No sound detected — check your mic'}
+            </p>
           </div>
-          <p style={{ fontSize: 13, color: '#6B7280', textAlign: 'center', fontWeight: 600 }}>
-            Read the passage aloud, then tap finished
-          </p>
           <button
             onClick={stopRecording}
             style={{ width: '100%', background: '#EF4444', color: '#fff', borderRadius: 18, padding: '20px', border: 'none', fontFamily: "'Nunito', sans-serif", fontSize: 17, fontWeight: 800, cursor: 'pointer' }}
@@ -185,7 +258,7 @@ export default function ReadingForm({ date, track, onSaved }: Props) {
         </div>
       )}
 
-      {/* Stage: uploading */}
+      {/* uploading */}
       {stage === 'uploading' && (
         <div style={{ textAlign: 'center', padding: '20px 0' }}>
           <div style={{ fontSize: 32, marginBottom: 8 }}>⬆️</div>
@@ -193,37 +266,28 @@ export default function ReadingForm({ date, track, onSaved }: Props) {
         </div>
       )}
 
-      {/* Stage: done */}
+      {/* done */}
       {stage === 'done' && (
         <div className="space-y-3">
-          {/* Success banner */}
           <div style={{ background: '#D1FAE5', borderRadius: 18, padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
               <p style={{ color: '#065F46', fontWeight: 800, fontSize: 15, margin: 0 }}>✓ Quest complete!</p>
-              {duration > 0 && (
-                <p style={{ color: '#059669', fontSize: 12, fontWeight: 600, margin: '2px 0 0' }}>
-                  Recording: {formatDuration(duration)}
-                </p>
-              )}
+              <p style={{ color: '#059669', fontSize: 12, fontWeight: 600, margin: '2px 0 0' }}>
+                {formatDuration(duration)} · {formatSize(blobSize)}
+              </p>
             </div>
             <span style={{ fontSize: 28 }}>🎉</span>
           </div>
 
-          {/* Audio player */}
           {audioUrl && (
             <div style={{ background: '#F9FAFB', borderRadius: 18, padding: '16px 18px' }}>
               <p style={{ fontSize: 11, fontWeight: 800, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 1, margin: '0 0 10px' }}>
                 🎧 Your recording
               </p>
-              <audio
-                controls
-                src={audioUrl}
-                style={{ width: '100%', borderRadius: 10 }}
-              />
+              <audio key={audioUrl} controls src={audioUrl} style={{ width: '100%', borderRadius: 10 }} />
             </div>
           )}
 
-          {/* Delete and re-record */}
           <button
             onClick={deleteAndReRecord}
             style={{ width: '100%', background: '#FEF2F2', color: '#DC2626', border: '2px solid #FECACA', borderRadius: 18, padding: '16px', fontFamily: "'Nunito', sans-serif", fontSize: 15, fontWeight: 800, cursor: 'pointer' }}
