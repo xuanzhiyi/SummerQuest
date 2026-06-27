@@ -76,18 +76,41 @@ export default async function QuestPage({ params }: Props) {
     weekday: 'long', day: 'numeric', month: 'long',
   })
 
-  return (
-    <div className="min-h-screen flex flex-col">
-      <NavBar role={role} name={session.user.name ?? ''} />
-      <main className="flex-1 max-w-2xl mx-auto w-full px-4 py-6">
-        <div className="flex items-center gap-3 mb-6 flex-wrap">
-          <Link href={`/day/${date}`} className="text-amber-500 hover:text-amber-700 text-sm shrink-0">
-            ← {displayDate}
-          </Link>
-          <h2 className="text-xl font-bold">{info.title}</h2>
-        </div>
+  const icon = info.title.match(/^\S+/)?.[0] ?? '📋'
+  const titleText = info.title.replace(/^\S+\s*/, '')
 
-        <p className="text-sm text-gray-500 mb-6">{info.description}</p>
+  return (
+    <div className="max-w-lg mx-auto min-h-screen" style={{ background: '#FFFBF5' }}>
+      {/* Navy header */}
+      <header style={{ background: '#0B1F3A', padding: '50px 20px 26px' }}>
+        <NavBar role={role} name={session.user.name ?? ''} />
+        <Link
+          href={`/day/${date}`}
+          style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 40, height: 40, borderRadius: 11, background: 'rgba(255,255,255,0.1)', color: '#fff', fontSize: 20, textDecoration: 'none', marginBottom: 12 }}
+        >
+          ←
+        </Link>
+        <p style={{ fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: 2, marginBottom: 8 }}>
+          QUEST DETAILS
+        </p>
+        <div className="animate-quest-pop" style={{ fontSize: 58, lineHeight: 1, marginBottom: 8 }}>
+          {icon}
+        </div>
+        <h1 style={{ fontFamily: "'Fredoka', sans-serif", fontSize: 30, fontWeight: 600, color: '#fff', margin: 0 }}>
+          {titleText}
+        </h1>
+      </header>
+
+      <main style={{ padding: '18px 16px 32px' }}>
+        {/* Description card */}
+        <div style={{ background: '#fff', borderRadius: 20, padding: 18, boxShadow: '0 2px 14px rgba(0,0,0,0.05)', marginBottom: 20 }}>
+          <p style={{ fontSize: 10, fontWeight: 800, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 2, margin: '0 0 8px' }}>
+            DESCRIPTION
+          </p>
+          <p style={{ fontSize: 16, color: '#374151', lineHeight: 1.65, fontWeight: 500, margin: 0 }}>
+            {info.description}
+          </p>
+        </div>
 
         <QuestPageContent
           track={track}

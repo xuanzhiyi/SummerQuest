@@ -10,33 +10,22 @@ interface Props {
 
 export default function NavBar({ role, name }: Props) {
   return (
-    <header className="bg-white border-b border-amber-100 px-4 py-3 flex items-center justify-between">
-      <Link href="/" className="text-lg font-bold text-amber-600">
-        🌞 SummerQuest
-      </Link>
-      <nav className="flex items-center gap-3 text-sm">
+    <div className="flex justify-between items-center mb-3" style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)' }}>
+      <div className="flex gap-3">
         {role === 'admin' && (
           <>
-            <Link href="/admin/settings" className="text-gray-500 hover:text-gray-800">
-              Settings
-            </Link>
-            <Link href="/admin/rewards" className="text-gray-500 hover:text-gray-800">
-              Rewards
-            </Link>
+            <Link href="/admin/settings" style={{ color: 'rgba(255,255,255,0.5)', textDecoration: 'none', fontWeight: 700 }}>Settings</Link>
+            <Link href="/admin/rewards" style={{ color: 'rgba(255,255,255,0.5)', textDecoration: 'none', fontWeight: 700 }}>Rewards</Link>
           </>
         )}
-        <Link href="/progress" className="text-gray-500 hover:text-gray-800">
-          Progress
-        </Link>
-        <span className="text-gray-400">|</span>
-        <span className="text-gray-500">{name}</span>
-        <button
-          onClick={() => signOut({ callbackUrl: '/login' })}
-          className="text-gray-400 hover:text-gray-700"
-        >
-          Sign out
-        </button>
-      </nav>
-    </header>
+        <Link href="/progress" style={{ color: 'rgba(255,255,255,0.5)', textDecoration: 'none', fontWeight: 700 }}>Progress</Link>
+      </div>
+      <button
+        onClick={() => signOut({ callbackUrl: '/login' })}
+        style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.45)', cursor: 'pointer', fontSize: 11, fontWeight: 700 }}
+      >
+        {name} · Sign out
+      </button>
+    </div>
   )
 }

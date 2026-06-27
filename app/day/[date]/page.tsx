@@ -2,7 +2,6 @@ import { redirect, notFound } from 'next/navigation'
 import { auth } from '@/lib/auth'
 import { isToday, isPast, PROGRAM_START, PROGRAM_END } from '@/lib/calendar'
 import sql from '@/lib/db'
-import NavBar from '@/components/ui/NavBar'
 import DayDetail from '@/components/calendar/DayDetail'
 
 interface Props {
@@ -14,12 +13,9 @@ export default async function DayPage({ params }: Props) {
   const session = await auth()
   if (!session) redirect('/login')
 
-  // Validate date format and range
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) notFound()
   if (date < PROGRAM_START || date > PROGRAM_END) notFound()
 
-
-  // Child can only view today or past
   const role = session.user.role
   if (role === 'child' && date > new Date().toISOString().slice(0, 10)) {
     redirect('/')
@@ -33,7 +29,6 @@ export default async function DayPage({ params }: Props) {
   }
   const canEdit = role === 'admin' || (role === 'child' && isToday(date))
 
-  // Load all entries for this day
   const [books, english, finnish, chinese, swedish, french, math, science, aiProject, sport, piano, wordPairing, wordTargets] =
     await Promise.all([
       sql`SELECT * FROM entries_books      WHERE user_id = ${userId} AND date = ${date}`,
@@ -47,15 +42,15 @@ export default async function DayPage({ params }: Props) {
       sql`SELECT * FROM entries_ai_project WHERE user_id = ${userId} AND date = ${date}`,
       sql`SELECT * FROM entries_sport      WHERE user_id = ${userId} AND date = ${date}`,
       sql`SELECT * FROM entries_piano      WHERE user_id = ${userId} AND date = ${date}`,
-      sql`SELECT language_pair FROM entries_word_pairing WHERE user_id = ${userId} AND date = ${date}`,
+      sql`SELECT language_pair, points_awarded FROM entries_word_pairing WHERE user_id = ${userId} AND date = ${date}`,
       sql`SELECT track, daily_target FROM track_settings WHERE track LIKE 'word_%'`,
     ])
 
   // Group word pairing by language pair
   const wpByPair: Record<string, unknown[]> = {}
   for (const row of wordPairing) {
-    const lp = (row as Record<string, unknown>).language_pair as string
-    const key = `word_${lp}`
+    const r = row as Record<string, unknown>
+    const key = `word_${r.language_pair as string}`
     wpByPair[key] = [...(wpByPair[key] ?? []), row]
   }
 
@@ -74,29 +69,33 @@ export default async function DayPage({ params }: Props) {
     ...wpByPair,
   }
 
-  // Build daily_target map for word pairing tracks
+  // Compute earned XP by summing points_awarded from all entries
+  function sumPoints(rows: unknown[]) {
+    return rows.reduce((acc: number, r: unknown) => acc + (Number((r as Record<string, unknown>).points_awarded) || 0), 0)
+  }
+  const earnedXP =
+    sumPoints(books) + sumPoints(english) + sumPoints(finnish) + sumPoints(chinese) +
+    sumPoints(swedish) + sumPoints(french) + sumPoints(math) + sumPoints(science) +
+    sumPoints(aiProject) + sumPoints(sport) + sumPoints(piano) + sumPoints(wordPairing)
+
   const dailyTargets: Record<string, number> = {}
   for (const row of wordTargets) {
     const r = row as Record<string, unknown>
     dailyTargets[r.track as string] = r.daily_target as number
   }
 
-  // Admin sees numeric AI scores; child/viewer do not
-  const showScores = role === 'admin'
-
   return (
-    <div className="min-h-screen flex flex-col">
-      <NavBar role={role} name={session.user.name ?? ''} />
-      <main className="flex-1 max-w-2xl mx-auto w-full px-4 py-6">
-        <DayDetail
-          date={date}
-          entries={entries}
-          canEdit={canEdit}
-          showScores={showScores}
-          role={role}
-          dailyTargets={dailyTargets}
-        />
-      </main>
+    <div className="max-w-lg mx-auto">
+      <DayDetail
+        date={date}
+        entries={entries}
+        canEdit={canEdit}
+        showScores={role === 'admin'}
+        role={role}
+        dailyTargets={dailyTargets}
+        earnedXP={earnedXP}
+        name={session.user.name ?? ''}
+      />
     </div>
   )
 }

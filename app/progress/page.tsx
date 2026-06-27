@@ -1,4 +1,5 @@
 import { redirect } from 'next/navigation'
+import Link from 'next/link'
 import { auth } from '@/lib/auth'
 import { getAllProgress } from '@/lib/progress'
 import NavBar from '@/components/ui/NavBar'
@@ -22,11 +23,16 @@ export default async function ProgressPage() {
   const progress = await getAllProgress(userId)
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <NavBar role={session.user.role} name={session.user.name ?? ''} />
-      <main className="flex-1 max-w-2xl mx-auto w-full px-4 py-6">
-        <h2 className="text-xl font-bold mb-1">Quest Progress</h2>
-        <p className="text-sm text-gray-500 mb-6">Points earned per track · Summer 2026</p>
+    <div className="min-h-screen max-w-2xl mx-auto">
+      <header style={{ background: '#0B1F3A', padding: '50px 20px 22px' }}>
+        <NavBar role={session.user.role} name={session.user.name ?? ''} />
+        <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 40, height: 40, borderRadius: 11, background: 'rgba(255,255,255,0.1)', color: '#fff', fontSize: 20, textDecoration: 'none', marginBottom: 10 }}>←</Link>
+        <h1 style={{ fontFamily: "'Fredoka', sans-serif", fontSize: 28, fontWeight: 600, color: '#fff', margin: 0 }}>
+          📊 Quest Progress
+        </h1>
+        <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', fontWeight: 600, marginTop: 4 }}>Points earned per track · Summer 2026</p>
+      </header>
+      <main className="px-4 py-6">
         <ProgressView progress={progress} role={session.user.role} />
       </main>
     </div>

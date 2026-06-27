@@ -14,13 +14,14 @@ export default async function SettingsPage() {
   ])
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <NavBar role={session.user.role} name={session.user.name ?? ''} />
-      <main className="flex-1 max-w-2xl mx-auto w-full px-4 py-6">
-        <h2 className="text-xl font-bold mb-1">Settings</h2>
-        <p className="text-sm text-gray-500 mb-6">
-          Adjust difficulty levels, points per track, and reward thresholds.
-        </p>
+    <div className="min-h-screen max-w-2xl mx-auto">
+      <header style={{ background: '#0B1F3A', padding: '50px 20px 22px' }}>
+        <NavBar role={session.user.role} name={session.user.name ?? ''} />
+        <h1 style={{ fontFamily: "'Fredoka', sans-serif", fontSize: 28, fontWeight: 600, color: '#fff', margin: 0 }}>
+          ⚙️ Settings
+        </h1>
+      </header>
+      <main className="px-4 py-6">
         <SettingsForm
           settings={settings as unknown as Record<string, unknown>[]}
           thresholds={thresholds as unknown as Record<string, unknown>[]}
