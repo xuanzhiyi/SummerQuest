@@ -8,6 +8,7 @@ interface Props {
   canEdit: boolean
   showScores: boolean
   role: string
+  dailyTargets?: Record<string, number>
 }
 
 const DAILY_QUESTS = [
@@ -30,15 +31,26 @@ const OCCASIONAL_QUESTS = [
   { track: 'ai_project', title: '🤖 AI Project',       bg: 'bg-pink-50 border-pink-200' },
 ]
 
-function hasEntry(track: string, entries: Record<string, unknown[]>): boolean {
-  if (track.startsWith('word_')) {
-    // word_english_finnish → entries.word_english_finnish (stored separately)
-    return (entries[track] ?? []).length > 0
-  }
-  return (entries[track] ?? []).length > 0
+function entryCount(track: string, entries: Record<string, unknown[]>): number {
+  return (entries[track] ?? []).length
 }
 
-export default function DayDetail({ date, entries, canEdit, role }: Props) {
+function isDone(track: string, entries: Record<string, unknown[]>, dailyTargets?: Record<string, number>): boolean {
+  const count = entryCount(track, entries)
+  if (count === 0) return false
+  const target = dailyTargets?.[track] ?? 1
+  return count >= target
+}
+
+function progressLabel(track: string, entries: Record<string, unknown[]>, dailyTargets?: Record<string, number>): string | null {
+  if (!track.startsWith('word_')) return null
+  const count = entryCount(track, entries)
+  const target = dailyTargets?.[track] ?? 1
+  if (count === 0) return null
+  return `${count}/${target} sets`
+}
+
+export default function DayDetail({ date, entries, canEdit, role, dailyTargets }: Props) {
   const displayDate = new Date(date + 'T12:00:00').toLocaleDateString('en', {
     weekday: 'long', day: 'numeric', month: 'long',
   })
@@ -63,7 +75,8 @@ export default function DayDetail({ date, entries, canEdit, role }: Props) {
         </h3>
         <div className="grid grid-cols-2 gap-3">
           {DAILY_QUESTS.map(({ track, title, bg }) => {
-            const done = hasEntry(track, entries)
+            const done = isDone(track, entries, dailyTargets)
+            const progress = progressLabel(track, entries, dailyTargets)
             return (
               <Link
                 key={track}
@@ -77,7 +90,9 @@ export default function DayDetail({ date, entries, canEdit, role }: Props) {
               >
                 <span className="font-semibold text-sm text-gray-900 leading-tight">{title}</span>
                 {done ? (
-                  <span className="text-xs text-green-600 font-medium">✓ Done</span>
+                  <span className="text-xs text-green-600 font-medium">✓ Done{progress ? ` (${progress})` : ''}</span>
+                ) : progress ? (
+                  <span className="text-xs text-amber-600 font-medium">{progress} — keep going!</span>
                 ) : canEdit ? (
                   <span className="text-xs text-amber-500 font-medium">Tap to log →</span>
                 ) : (
@@ -95,7 +110,7 @@ export default function DayDetail({ date, entries, canEdit, role }: Props) {
         </h3>
         <div className="grid grid-cols-2 gap-3">
           {OCCASIONAL_QUESTS.map(({ track, title, bg }) => {
-            const done = hasEntry(track, entries)
+            const done = isDone(track, entries, dailyTargets)
             return (
               <Link
                 key={track}

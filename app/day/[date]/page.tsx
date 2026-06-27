@@ -29,7 +29,7 @@ export default async function DayPage({ params }: Props) {
   const canEdit = role === 'admin' || (role === 'child' && isToday(date))
 
   // Load all entries for this day
-  const [books, english, finnish, chinese, swedish, french, math, science, aiProject, sport, wordPairing] =
+  const [books, english, finnish, chinese, swedish, french, math, science, aiProject, sport, wordPairing, wordTargets] =
     await Promise.all([
       sql`SELECT * FROM entries_books      WHERE user_id = ${userId} AND date = ${date}`,
       sql`SELECT * FROM entries_english    WHERE user_id = ${userId} AND date = ${date}`,
@@ -42,6 +42,7 @@ export default async function DayPage({ params }: Props) {
       sql`SELECT * FROM entries_ai_project WHERE user_id = ${userId} AND date = ${date}`,
       sql`SELECT * FROM entries_sport      WHERE user_id = ${userId} AND date = ${date}`,
       sql`SELECT language_pair FROM entries_word_pairing WHERE user_id = ${userId} AND date = ${date}`,
+      sql`SELECT track, daily_target FROM track_settings WHERE track LIKE 'word_%'`,
     ])
 
   // Group word pairing by language pair
@@ -66,6 +67,13 @@ export default async function DayPage({ params }: Props) {
     ...wpByPair,
   }
 
+  // Build daily_target map for word pairing tracks
+  const dailyTargets: Record<string, number> = {}
+  for (const row of wordTargets) {
+    const r = row as Record<string, unknown>
+    dailyTargets[r.track as string] = r.daily_target as number
+  }
+
   // Admin sees numeric AI scores; child/viewer do not
   const showScores = role === 'admin'
 
@@ -79,6 +87,7 @@ export default async function DayPage({ params }: Props) {
           canEdit={canEdit}
           showScores={showScores}
           role={role}
+          dailyTargets={dailyTargets}
         />
       </main>
     </div>
