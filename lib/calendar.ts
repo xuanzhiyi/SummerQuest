@@ -50,15 +50,17 @@ export async function getCalendarTiles(userId: number): Promise<DayTile[]> {
         SELECT date, points_per_entry AS pts FROM entries_sport     JOIN track_settings ON track = 'sport'      WHERE user_id = ${userId}
         UNION ALL
         SELECT date, points_per_entry AS pts FROM entries_piano     JOIN track_settings ON track = 'piano'      WHERE user_id = ${userId}
+        UNION ALL
+        SELECT date, points_awarded   AS pts FROM entries_word_pairing WHERE user_id = ${userId}
       ) all_entries
       GROUP BY date
     )
-    SELECT date, total_points FROM daily
+    SELECT date::text AS date, total_points FROM daily
   `
 
   // Count distinct completed quests per day
   const questCountRows = await sql`
-    SELECT date, COUNT(DISTINCT track) AS quest_count FROM (
+    SELECT date::text AS date, COUNT(DISTINCT track) AS quest_count FROM (
       SELECT date, 'books'       AS track FROM entries_books       WHERE user_id = ${userId}
       UNION ALL
       SELECT date, 'english'              FROM entries_english      WHERE user_id = ${userId}
@@ -103,7 +105,7 @@ export async function getCalendarTiles(userId: number): Promise<DayTile[]> {
       SELECT date, ai_score, effort_weight FROM entries_science  JOIN track_settings ON track = 'science'  WHERE user_id = ${userId} AND ai_score IS NOT NULL
     )
     SELECT
-      date,
+      date::text AS date,
       SUM(ai_score * effort_weight) / NULLIF(SUM(effort_weight), 0) AS weighted_score
     FROM ai_entries
     GROUP BY date
@@ -111,13 +113,12 @@ export async function getCalendarTiles(userId: number): Promise<DayTile[]> {
 
   const pointsMap = new Map<string, number>()
   for (const row of pointsRows) {
-    pointsMap.set(String(row.date).slice(0, 10), Number(row.total_points))
+    pointsMap.set(row.date as string, Number(row.total_points))
   }
 
   const signalMap = new Map<string, EffortSignal>()
   for (const row of signalRows) {
-    const date = String(row.date).slice(0, 10)
-    signalMap.set(date, scoreToEffortSignal(Number(row.weighted_score)))
+    signalMap.set(row.date as string, scoreToEffortSignal(Number(row.weighted_score)))
   }
 
   return programDates().map((date) => ({
