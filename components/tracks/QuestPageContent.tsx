@@ -11,6 +11,7 @@ import AiProjectForm from './AiProjectForm'
 import WordPairingGame from '@/components/game/WordPairingGame'
 import { getRandomWords, PAIR_LABELS } from '@/lib/wordlists'
 import type { LanguagePair } from '@/lib/wordlists'
+import MathText from '@/components/ui/MathText'
 
 interface Props {
   track: string
@@ -206,13 +207,11 @@ function EntryCard({ track, entry, showScores }: { track: string; entry: Record<
     case 'math': case 'science':
       return (
         <div className="bg-white rounded-xl p-4 shadow-sm text-sm space-y-2">
-          <div className="bg-gray-50 rounded-lg p-3 whitespace-pre-wrap text-gray-800">
-            {String(entry.ai_problems)}
-          </div>
+          <MathText text={String(entry.ai_problems)} className="bg-gray-50 rounded-lg p-3 text-gray-800" />
           {!!entry.ai_feedback && (
             <div className="bg-green-50 rounded-lg p-3">
               <p className="text-xs font-semibold text-green-700 mb-1">Feedback ✨</p>
-              <p className="whitespace-pre-wrap">{String(entry.ai_feedback)}</p>
+              <MathText text={String(entry.ai_feedback)} className="text-gray-700" />
               {showScores && entry.ai_score != null && (
                 <p className="text-xs text-gray-400 mt-2">Score: {String(entry.ai_score)}/100</p>
               )}

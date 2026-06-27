@@ -70,7 +70,11 @@ Return only the passage, nothing else.`
 export function mathProblemsPrompt(level: number): string {
   return `Generate a small set of 3-4 math problems for a 13-year-old Finnish student at the grade 6→7 transition (topics: fractions/decimals, percentages, basic geometry, simple equations, basic statistics). Difficulty level: ${level}/10.
 
-Format the problems clearly, numbered 1 through 3 (or 4). Make them varied — not all the same type.
+Format each problem with its number, the Finnish text, then a Chinese translation in parentheses on the same line. Use LaTeX notation for all mathematical expressions (inline: $...$, display: $$...$$).
+
+Example format:
+1. Laske: $3 + 5 \\cdot 2$ (计算：$3 + 5 \\cdot 2$)
+2. Ratkaise yhtälö: $2x - 4 = 10$ (解方程：$2x - 4 = 10$)
 
 Return only the numbered problems, nothing else.`
 }
@@ -84,9 +88,9 @@ ${problems}
 His answers:
 ${answers}
 
-Give warm, encouraging written feedback as an overall summary: what he got right, what needs work, and a brief explanation for any mistakes. Do NOT give a pass/fail verdict. Keep it to 3-5 sentences and age-appropriate in tone.
+Give warm, encouraging written feedback as an overall summary: what he got right, what needs work, and a brief explanation for any mistakes. Do NOT give a pass/fail verdict. Keep it to 3-5 sentences and age-appropriate in tone. Write the feedback in English first, then add a Chinese translation after a blank line starting with "中文：".
 
-Then on a new line output SCORE: followed by a number from 0 to 100 reflecting overall performance for his level. Output only the feedback and the SCORE line, nothing else.`
+Then on a new line output SCORE: followed by a number from 0 to 100 reflecting overall performance for his level. Output only the feedback, the Chinese translation, and the SCORE line, nothing else.`
 }
 
 export function scienceProblemsPrompt(level: number): string {
