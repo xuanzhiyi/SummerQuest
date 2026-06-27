@@ -1,17 +1,18 @@
-import { NextRequest, NextResponse } from 'next/server'
+﻿import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import sql from '@/lib/db'
 import { generateText } from '@/lib/ai/client'
 import { mathProblemsPrompt, mathFeedbackPrompt, extractScore } from '@/lib/ai/prompts'
 
-// GET — generate problems (not saved)
+// GET â€” generate problems (not saved)
 export async function GET() {
   const session = await auth()
-  if (!session || session.user.role === 'viewer') {
+  if (!session || session.user.role === 'guardian') {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const [settings] = await sql`SELECT current_level FROM track_settings WHERE track = 'math'`
+  const userId = parseInt(session.user.id)
+  const [settings] = await sql`SELECT current_level FROM track_settings WHERE track = 'math' AND child_user_id = ${userId}`
   const level = settings?.current_level ?? 5
 
   try {
@@ -23,10 +24,10 @@ export async function GET() {
   }
 }
 
-// POST — submit answers, grade, save
+// POST â€” submit answers, grade, save
 export async function POST(req: NextRequest) {
   const session = await auth()
-  if (!session || session.user.role === 'viewer') {
+  if (!session || session.user.role === 'guardian') {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
@@ -42,7 +43,7 @@ export async function POST(req: NextRequest) {
   }
 
   const [settings] = await sql`
-    SELECT points_per_entry, current_level FROM track_settings WHERE track = 'math'
+    SELECT points_per_entry, current_level FROM track_settings WHERE track = 'math' AND child_user_id = ${userId}
   `
   const points = settings?.points_per_entry ?? 10
   const level = settings?.current_level ?? 5

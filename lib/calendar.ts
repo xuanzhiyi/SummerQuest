@@ -25,33 +25,32 @@ export function isPast(date: string): boolean {
 
 // Load daily point totals and effort signals for all program days
 export async function getCalendarTiles(userId: number): Promise<DayTile[]> {
-  // Gather points from all per-track tables joined with current settings
   const pointsRows = await sql`
     WITH daily AS (
       SELECT date, SUM(pts) AS total_points FROM (
-        SELECT date, points_per_entry AS pts FROM entries_books     JOIN track_settings ON track = 'books'      WHERE user_id = ${userId}
+        SELECT date, points_per_entry AS pts FROM entries_books      JOIN track_settings ON track_settings.track = 'books'       AND track_settings.child_user_id = ${userId} WHERE entries_books.user_id      = ${userId}
         UNION ALL
-        SELECT date, points_per_entry AS pts FROM entries_english   JOIN track_settings ON track = 'english'    WHERE user_id = ${userId}
+        SELECT date, points_per_entry AS pts FROM entries_english    JOIN track_settings ON track_settings.track = 'english'     AND track_settings.child_user_id = ${userId} WHERE entries_english.user_id    = ${userId}
         UNION ALL
-        SELECT date, points_per_entry AS pts FROM entries_finnish   JOIN track_settings ON track = 'finnish'    WHERE user_id = ${userId}
+        SELECT date, points_per_entry AS pts FROM entries_finnish    JOIN track_settings ON track_settings.track = 'finnish'     AND track_settings.child_user_id = ${userId} WHERE entries_finnish.user_id    = ${userId}
         UNION ALL
-        SELECT date, points_per_entry AS pts FROM entries_chinese   JOIN track_settings ON track = 'chinese'    WHERE user_id = ${userId}
+        SELECT date, points_per_entry AS pts FROM entries_chinese    JOIN track_settings ON track_settings.track = 'chinese'     AND track_settings.child_user_id = ${userId} WHERE entries_chinese.user_id    = ${userId}
         UNION ALL
-        SELECT date, points_per_entry AS pts FROM entries_swedish   JOIN track_settings ON track = 'swedish'    WHERE user_id = ${userId}
+        SELECT date, points_per_entry AS pts FROM entries_swedish    JOIN track_settings ON track_settings.track = 'swedish'     AND track_settings.child_user_id = ${userId} WHERE entries_swedish.user_id    = ${userId}
         UNION ALL
-        SELECT date, points_per_entry AS pts FROM entries_french    JOIN track_settings ON track = 'french'     WHERE user_id = ${userId}
+        SELECT date, points_per_entry AS pts FROM entries_french     JOIN track_settings ON track_settings.track = 'french'      AND track_settings.child_user_id = ${userId} WHERE entries_french.user_id     = ${userId}
         UNION ALL
-        SELECT date, points_per_entry AS pts FROM entries_math      JOIN track_settings ON track = 'math'       WHERE user_id = ${userId}
+        SELECT date, points_per_entry AS pts FROM entries_math       JOIN track_settings ON track_settings.track = 'math'        AND track_settings.child_user_id = ${userId} WHERE entries_math.user_id       = ${userId}
         UNION ALL
-        SELECT date, points_per_entry AS pts FROM entries_science   JOIN track_settings ON track = 'science'    WHERE user_id = ${userId}
+        SELECT date, points_per_entry AS pts FROM entries_science    JOIN track_settings ON track_settings.track = 'science'     AND track_settings.child_user_id = ${userId} WHERE entries_science.user_id    = ${userId}
         UNION ALL
-        SELECT date, points_per_entry AS pts FROM entries_ai_project JOIN track_settings ON track = 'ai_project' WHERE user_id = ${userId}
+        SELECT date, points_per_entry AS pts FROM entries_ai_project JOIN track_settings ON track_settings.track = 'ai_project'  AND track_settings.child_user_id = ${userId} WHERE entries_ai_project.user_id = ${userId}
         UNION ALL
-        SELECT date, points_per_entry AS pts FROM entries_sport     JOIN track_settings ON track = 'sport'      WHERE user_id = ${userId}
+        SELECT date, points_per_entry AS pts FROM entries_sport      JOIN track_settings ON track_settings.track = 'sport'       AND track_settings.child_user_id = ${userId} WHERE entries_sport.user_id      = ${userId}
         UNION ALL
-        SELECT date, points_per_entry AS pts FROM entries_piano     JOIN track_settings ON track = 'piano'      WHERE user_id = ${userId}
+        SELECT date, points_per_entry AS pts FROM entries_piano      JOIN track_settings ON track_settings.track = 'piano'       AND track_settings.child_user_id = ${userId} WHERE entries_piano.user_id      = ${userId}
         UNION ALL
-        SELECT date, points_per_entry AS pts FROM entries_diary     JOIN track_settings ON track = 'diary'      WHERE user_id = ${userId}
+        SELECT date, points_per_entry AS pts FROM entries_diary      JOIN track_settings ON track_settings.track = 'diary'       AND track_settings.child_user_id = ${userId} WHERE entries_diary.user_id      = ${userId}
         UNION ALL
         SELECT date, points_awarded   AS pts FROM entries_word_pairing WHERE user_id = ${userId}
       ) all_entries
@@ -60,7 +59,6 @@ export async function getCalendarTiles(userId: number): Promise<DayTile[]> {
     SELECT date::text AS date, total_points FROM daily
   `
 
-  // Count distinct completed quests per day
   const questCountRows = await sql`
     SELECT date::text AS date, COUNT(DISTINCT track) AS quest_count FROM (
       SELECT date, 'books'       AS track FROM entries_books       WHERE user_id = ${userId}
@@ -92,38 +90,28 @@ export async function getCalendarTiles(userId: number): Promise<DayTile[]> {
     GROUP BY date
   `
 
-  const questCountMap = new Map<string, number>()
-  for (const row of questCountRows) {
-    questCountMap.set(String(row.date).slice(0, 10), Number(row.quest_count))
-  }
-
-  // Gather weighted AI scores per day (english, finnish, math, science only)
   const signalRows = await sql`
     WITH ai_entries AS (
-      SELECT date, ai_score, effort_weight FROM entries_english  JOIN track_settings ON track = 'english'  WHERE user_id = ${userId} AND ai_score IS NOT NULL
+      SELECT date, ai_score, effort_weight FROM entries_english  JOIN track_settings ON track_settings.track = 'english'  AND track_settings.child_user_id = ${userId} WHERE entries_english.user_id  = ${userId} AND ai_score IS NOT NULL
       UNION ALL
-      SELECT date, ai_score, effort_weight FROM entries_finnish  JOIN track_settings ON track = 'finnish'  WHERE user_id = ${userId} AND ai_score IS NOT NULL
+      SELECT date, ai_score, effort_weight FROM entries_finnish  JOIN track_settings ON track_settings.track = 'finnish'  AND track_settings.child_user_id = ${userId} WHERE entries_finnish.user_id  = ${userId} AND ai_score IS NOT NULL
       UNION ALL
-      SELECT date, ai_score, effort_weight FROM entries_math     JOIN track_settings ON track = 'math'     WHERE user_id = ${userId} AND ai_score IS NOT NULL
+      SELECT date, ai_score, effort_weight FROM entries_math     JOIN track_settings ON track_settings.track = 'math'     AND track_settings.child_user_id = ${userId} WHERE entries_math.user_id     = ${userId} AND ai_score IS NOT NULL
       UNION ALL
-      SELECT date, ai_score, effort_weight FROM entries_science  JOIN track_settings ON track = 'science'  WHERE user_id = ${userId} AND ai_score IS NOT NULL
+      SELECT date, ai_score, effort_weight FROM entries_science  JOIN track_settings ON track_settings.track = 'science'  AND track_settings.child_user_id = ${userId} WHERE entries_science.user_id  = ${userId} AND ai_score IS NOT NULL
     )
-    SELECT
-      date::text AS date,
-      SUM(ai_score * effort_weight) / NULLIF(SUM(effort_weight), 0) AS weighted_score
-    FROM ai_entries
-    GROUP BY date
+    SELECT date::text AS date, SUM(ai_score * effort_weight) / NULLIF(SUM(effort_weight), 0) AS weighted_score
+    FROM ai_entries GROUP BY date
   `
 
   const pointsMap = new Map<string, number>()
-  for (const row of pointsRows) {
-    pointsMap.set(row.date as string, Number(row.total_points))
-  }
+  for (const row of pointsRows) pointsMap.set(row.date as string, Number(row.total_points))
+
+  const questCountMap = new Map<string, number>()
+  for (const row of questCountRows) questCountMap.set(String(row.date).slice(0, 10), Number(row.quest_count))
 
   const signalMap = new Map<string, EffortSignal>()
-  for (const row of signalRows) {
-    signalMap.set(row.date as string, scoreToEffortSignal(Number(row.weighted_score)))
-  }
+  for (const row of signalRows) signalMap.set(row.date as string, scoreToEffortSignal(Number(row.weighted_score)))
 
   return programDates().map((date) => ({
     date,
@@ -133,33 +121,32 @@ export async function getCalendarTiles(userId: number): Promise<DayTile[]> {
   }))
 }
 
-// Cumulative per-track point totals (for per-track quest progress)
 export async function getTrackTotals(userId: number) {
   const rows = await sql`
     SELECT track, SUM(pts) AS total FROM (
-      SELECT 'books'      AS track, points_per_entry AS pts FROM entries_books      JOIN track_settings ON track_settings.track = 'books'       WHERE user_id = ${userId}
+      SELECT 'books'      AS track, points_per_entry AS pts FROM entries_books      JOIN track_settings ON track_settings.track = 'books'       AND track_settings.child_user_id = ${userId} WHERE entries_books.user_id      = ${userId}
       UNION ALL
-      SELECT 'english'    AS track, points_per_entry AS pts FROM entries_english    JOIN track_settings ON track_settings.track = 'english'     WHERE user_id = ${userId}
+      SELECT 'english'    AS track, points_per_entry AS pts FROM entries_english    JOIN track_settings ON track_settings.track = 'english'     AND track_settings.child_user_id = ${userId} WHERE entries_english.user_id    = ${userId}
       UNION ALL
-      SELECT 'finnish'    AS track, points_per_entry AS pts FROM entries_finnish    JOIN track_settings ON track_settings.track = 'finnish'     WHERE user_id = ${userId}
+      SELECT 'finnish'    AS track, points_per_entry AS pts FROM entries_finnish    JOIN track_settings ON track_settings.track = 'finnish'     AND track_settings.child_user_id = ${userId} WHERE entries_finnish.user_id    = ${userId}
       UNION ALL
-      SELECT 'chinese'    AS track, points_per_entry AS pts FROM entries_chinese    JOIN track_settings ON track_settings.track = 'chinese'     WHERE user_id = ${userId}
+      SELECT 'chinese'    AS track, points_per_entry AS pts FROM entries_chinese    JOIN track_settings ON track_settings.track = 'chinese'     AND track_settings.child_user_id = ${userId} WHERE entries_chinese.user_id    = ${userId}
       UNION ALL
-      SELECT 'swedish'    AS track, points_per_entry AS pts FROM entries_swedish    JOIN track_settings ON track_settings.track = 'swedish'     WHERE user_id = ${userId}
+      SELECT 'swedish'    AS track, points_per_entry AS pts FROM entries_swedish    JOIN track_settings ON track_settings.track = 'swedish'     AND track_settings.child_user_id = ${userId} WHERE entries_swedish.user_id    = ${userId}
       UNION ALL
-      SELECT 'french'     AS track, points_per_entry AS pts FROM entries_french     JOIN track_settings ON track_settings.track = 'french'      WHERE user_id = ${userId}
+      SELECT 'french'     AS track, points_per_entry AS pts FROM entries_french     JOIN track_settings ON track_settings.track = 'french'      AND track_settings.child_user_id = ${userId} WHERE entries_french.user_id     = ${userId}
       UNION ALL
-      SELECT 'math'       AS track, points_per_entry AS pts FROM entries_math       JOIN track_settings ON track_settings.track = 'math'        WHERE user_id = ${userId}
+      SELECT 'math'       AS track, points_per_entry AS pts FROM entries_math       JOIN track_settings ON track_settings.track = 'math'        AND track_settings.child_user_id = ${userId} WHERE entries_math.user_id       = ${userId}
       UNION ALL
-      SELECT 'science'    AS track, points_per_entry AS pts FROM entries_science    JOIN track_settings ON track_settings.track = 'science'     WHERE user_id = ${userId}
+      SELECT 'science'    AS track, points_per_entry AS pts FROM entries_science    JOIN track_settings ON track_settings.track = 'science'     AND track_settings.child_user_id = ${userId} WHERE entries_science.user_id    = ${userId}
       UNION ALL
-      SELECT 'ai_project' AS track, points_per_entry AS pts FROM entries_ai_project JOIN track_settings ON track_settings.track = 'ai_project'  WHERE user_id = ${userId}
+      SELECT 'ai_project' AS track, points_per_entry AS pts FROM entries_ai_project JOIN track_settings ON track_settings.track = 'ai_project'  AND track_settings.child_user_id = ${userId} WHERE entries_ai_project.user_id = ${userId}
       UNION ALL
-      SELECT 'sport'      AS track, points_per_entry AS pts FROM entries_sport      JOIN track_settings ON track_settings.track = 'sport'       WHERE user_id = ${userId}
+      SELECT 'sport'      AS track, points_per_entry AS pts FROM entries_sport      JOIN track_settings ON track_settings.track = 'sport'       AND track_settings.child_user_id = ${userId} WHERE entries_sport.user_id      = ${userId}
       UNION ALL
-      SELECT 'piano'      AS track, points_per_entry AS pts FROM entries_piano      JOIN track_settings ON track_settings.track = 'piano'       WHERE user_id = ${userId}
+      SELECT 'piano'      AS track, points_per_entry AS pts FROM entries_piano      JOIN track_settings ON track_settings.track = 'piano'       AND track_settings.child_user_id = ${userId} WHERE entries_piano.user_id      = ${userId}
       UNION ALL
-      SELECT 'diary'      AS track, points_per_entry AS pts FROM entries_diary      JOIN track_settings ON track_settings.track = 'diary'       WHERE user_id = ${userId}
+      SELECT 'diary'      AS track, points_per_entry AS pts FROM entries_diary      JOIN track_settings ON track_settings.track = 'diary'       AND track_settings.child_user_id = ${userId} WHERE entries_diary.user_id      = ${userId}
     ) all_entries
     GROUP BY track
   `

@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+﻿import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import sql from '@/lib/db'
 import { generateText } from '@/lib/ai/client'
@@ -6,7 +6,7 @@ import { bookFollowUpPrompt } from '@/lib/ai/prompts'
 
 export async function POST(req: NextRequest) {
   const session = await auth()
-  if (!session || session.user.role === 'viewer') {
+  if (!session || session.user.role === 'guardian') {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Can only log today' }, { status: 403 })
   }
 
-  const [settings] = await sql`SELECT points_per_entry FROM track_settings WHERE track = 'books'`
+  const [settings] = await sql`SELECT points_per_entry FROM track_settings WHERE track = 'books' AND child_user_id = ${userId}`
   const points = settings?.points_per_entry ?? 10
 
   // Save entry first so child can see it even if AI call fails
@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
     RETURNING *
   `
 
-  // Generate follow-up question (non-blocking — failure doesn't break the save)
+  // Generate follow-up question (non-blocking â€” failure doesn't break the save)
   let ai_question: string | null = null
   try {
     ai_question = await generateText(bookFollowUpPrompt(title, notes))
@@ -43,10 +43,10 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({ entry: { ...entry, ai_question }, points_awarded: points })
 }
 
-// PUT /api/entries/books — save child's answer to the AI follow-up question
+// PUT /api/entries/books â€” save child's answer to the AI follow-up question
 export async function PUT(req: NextRequest) {
   const session = await auth()
-  if (!session || session.user.role === 'viewer') {
+  if (!session || session.user.role === 'guardian') {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 

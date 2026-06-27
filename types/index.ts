@@ -1,4 +1,4 @@
-export type Role = 'admin' | 'child' | 'viewer'
+export type Role = 'admin' | 'child' | 'guardian'
 
 export type Track =
   | 'books'

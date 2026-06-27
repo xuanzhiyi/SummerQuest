@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+﻿import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import sql from '@/lib/db'
 import { generateText } from '@/lib/ai/client'
@@ -6,7 +6,7 @@ import { finnishFeedbackPrompt, extractScore } from '@/lib/ai/prompts'
 
 export async function POST(req: NextRequest) {
   const session = await auth()
-  if (!session || session.user.role === 'viewer') {
+  if (!session || session.user.role === 'guardian') {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
   }
 
   const [settings] = await sql`
-    SELECT points_per_entry, current_level FROM track_settings WHERE track = 'finnish'
+    SELECT points_per_entry, current_level FROM track_settings WHERE track = 'finnish' AND child_user_id = ${userId}
   `
   const points = settings?.points_per_entry ?? 10
   const level = settings?.current_level ?? 5

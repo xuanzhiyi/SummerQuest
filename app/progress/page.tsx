@@ -9,13 +9,12 @@ export default async function ProgressPage() {
   const session = await auth()
   if (!session) redirect('/login')
 
-  // Viewer reads child's progress — find child user id
+  // Guardian reads their first linked child's progress
   let userId: number
-  if (session.user.role === 'viewer') {
-    const sql = (await import('@/lib/db')).default
-    const [child] = await sql`SELECT id FROM users WHERE role = 'child' LIMIT 1`
-    if (!child) redirect('/')
-    userId = child.id
+  if (session.user.role === 'guardian') {
+    const childId = session.user.childIds?.[0]
+    if (!childId) redirect('/')
+    userId = childId
   } else {
     userId = parseInt(session.user.id)
   }

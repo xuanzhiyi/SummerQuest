@@ -21,11 +21,12 @@ export default async function DayPage({ params }: Props) {
     redirect('/')
   }
 
-  // Viewer sees the child's data (read-only)
+  // Guardian views their first linked child's data
   let userId = parseInt(session.user.id)
-  if (role === 'viewer') {
-    const [child] = await sql`SELECT id FROM users WHERE role = 'child' LIMIT 1`
-    if (child) userId = Number(child.id)
+  if (role === 'guardian') {
+    const childId = session.user.childIds?.[0]
+    if (!childId) redirect('/')
+    userId = childId
   }
   const canEdit = role === 'admin' || (role === 'child' && isToday(date))
 

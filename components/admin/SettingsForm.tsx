@@ -50,9 +50,10 @@ interface Threshold {
 interface Props {
   settings: Record<string, unknown>[]
   thresholds: Record<string, unknown>[]
+  childUserId?: number
 }
 
-export default function SettingsForm({ settings, thresholds }: Props) {
+export default function SettingsForm({ settings, thresholds, childUserId }: Props) {
   const [rows, setRows] = useState<TrackSetting[]>(settings as unknown as TrackSetting[])
   const [tRows, setTRows] = useState<Threshold[]>(thresholds as unknown as Threshold[])
   const [saving, setSaving] = useState<string | null>(null)
@@ -67,7 +68,7 @@ export default function SettingsForm({ settings, thresholds }: Props) {
     const res = await fetch('/api/settings', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ track, [field]: value }),
+      body: JSON.stringify({ track, child_user_id: childUserId, [field]: value }),
     })
     setSaving(null)
     if (res.ok) {

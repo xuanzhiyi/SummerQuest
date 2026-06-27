@@ -14,13 +14,9 @@ export default auth((req) => {
     return NextResponse.redirect(new URL('/login', req.url))
   }
 
-  // Viewer cannot access admin routes
-  if (req.auth.user.role === 'viewer' && pathname.startsWith('/admin')) {
-    return NextResponse.redirect(new URL('/', req.url))
-  }
-
-  // Child cannot access admin routes
-  if (req.auth.user.role === 'child' && pathname.startsWith('/admin')) {
+  // Only admin can access /admin routes
+  const role = req.auth.user.role
+  if (role !== 'admin' && pathname.startsWith('/admin')) {
     return NextResponse.redirect(new URL('/', req.url))
   }
 

@@ -8,90 +8,59 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
     Credentials({
       credentials: {
-        // admin uses email + password
-        // child uses username + pin
-        // viewer uses pin only (username = 'viewer')
-        username: { label: 'Username', type: 'text' },
-        email: { label: 'Email', type: 'email' },
-        password: { label: 'Password / PIN', type: 'password' },
+        name: { label: 'Name', type: 'text' },
+        pin:  { label: 'PIN',  type: 'password' },
       },
       async authorize(credentials) {
-        const { username, email, password } = credentials as {
-          username?: string
-          email?: string
-          password?: string
+        const { name, pin } = credentials as { name?: string; pin?: string }
+        if (!name || !pin) return null
+
+        const [user] = await sql`
+          SELECT id, name, role, pin_hash, password_hash
+          FROM users WHERE LOWER(name) = LOWER(${name})
+        `
+        if (!user) return null
+
+        // Try pin_hash first; fall back to password_hash for legacy accounts
+        let valid = false
+        if (user.pin_hash) {
+          valid = await compare(pin, user.pin_hash as string)
+        } else if (user.password_hash) {
+          valid = await compare(pin, user.password_hash as string)
+        }
+        if (!valid) return null
+
+        // Guardian: load linked child IDs into session
+        let childIds: number[] = []
+        if (user.role === 'guardian') {
+          const rows = await sql`SELECT child_id FROM guardian_children WHERE guardian_id = ${user.id}`
+          childIds = rows.map(r => Number(r.child_id))
         }
 
-        if (!password) return null
-
-        // Admin login: email + password
-        if (email) {
-          const [user] = await sql`
-            SELECT id, name, role, email, password_hash
-            FROM users
-            WHERE email = ${email} AND role = 'admin'
-          `
-          if (!user || !user.password_hash) return null
-          const valid = await compare(password, user.password_hash)
-          if (!valid) return null
-          return { id: String(user.id), name: user.name, role: user.role, email: user.email }
-        }
-
-        // Child login: username + PIN
-        if (username && username !== 'viewer') {
-          const [user] = await sql`
-            SELECT id, name, role, username, pin_hash
-            FROM users
-            WHERE username = ${username} AND role = 'child'
-          `
-          if (!user || !user.pin_hash) return null
-          const valid = await compare(password, user.pin_hash)
-          if (!valid) return null
-          return { id: String(user.id), name: user.name, role: user.role }
-        }
-
-        // Viewer login: PIN only
-        if (username === 'viewer' || (!email && !username)) {
-          const [user] = await sql`
-            SELECT id, name, role, pin_hash
-            FROM users
-            WHERE role = 'viewer'
-          `
-          if (!user || !user.pin_hash) return null
-          const valid = await compare(password, user.pin_hash)
-          if (!valid) return null
-          return { id: String(user.id), name: user.name, role: user.role }
-        }
-
-        return null
+        return { id: String(user.id), name: String(user.name), role: String(user.role), childIds }
       },
     }),
   ],
   callbacks: {
     jwt({ token, user }) {
       if (user) {
-        token.role = (user as { role: string }).role
-        token.id = user.id
+        token.role     = (user as { role: string }).role
+        token.id       = user.id
+        token.childIds = (user as { childIds?: number[] }).childIds ?? []
       }
       return token
     },
     session({ session, token }) {
-      session.user.role = token.role as string
-      session.user.id = token.id as string
+      session.user.role     = token.role as string
+      session.user.id       = token.id as string
+      session.user.childIds = (token.childIds as number[]) ?? []
       return session
     },
   },
-  pages: {
-    signIn: '/login',
-  },
-  session: {
-    strategy: 'jwt',
-    // Long-lived session for viewer (grandparents) — 90 days
-    maxAge: 90 * 24 * 60 * 60,
-  },
+  pages: { signIn: '/login' },
+  session: { strategy: 'jwt', maxAge: 90 * 24 * 60 * 60 },
 })
 
-// Extend next-auth types
 declare module 'next-auth' {
   interface Session {
     user: {
@@ -99,6 +68,7 @@ declare module 'next-auth' {
       name?: string | null
       email?: string | null
       role: string
+      childIds: number[]
     }
   }
 }

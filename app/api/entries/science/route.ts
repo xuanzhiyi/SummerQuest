@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+﻿import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import sql from '@/lib/db'
 import { generateText } from '@/lib/ai/client'
@@ -6,11 +6,12 @@ import { scienceProblemsPrompt, scienceFeedbackPrompt, extractScore } from '@/li
 
 export async function GET() {
   const session = await auth()
-  if (!session || session.user.role === 'viewer') {
+  if (!session || session.user.role === 'guardian') {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const [settings] = await sql`SELECT current_level FROM track_settings WHERE track = 'science'`
+  const userId = parseInt(session.user.id)
+  const [settings] = await sql`SELECT current_level FROM track_settings WHERE track = 'science' AND child_user_id = ${userId}`
   const level = settings?.current_level ?? 5
 
   try {
@@ -24,7 +25,7 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   const session = await auth()
-  if (!session || session.user.role === 'viewer') {
+  if (!session || session.user.role === 'guardian') {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
@@ -40,7 +41,7 @@ export async function POST(req: NextRequest) {
   }
 
   const [settings] = await sql`
-    SELECT points_per_entry, current_level FROM track_settings WHERE track = 'science'
+    SELECT points_per_entry, current_level FROM track_settings WHERE track = 'science' AND child_user_id = ${userId}
   `
   const points = settings?.points_per_entry ?? 10
   const level = settings?.current_level ?? 5
