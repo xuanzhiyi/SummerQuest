@@ -83,6 +83,7 @@ export default function QuestPageContent({ track, date, initialEntries, canEdit,
           onSaved={handleSaved}
           initialText={latestEntry.ai_generated_text as string}
           initialLevel={latestEntry.level_at_time as number}
+          savedAudioKey={(latestEntry.audio_key as string | null) ?? null}
         />
       )
     }

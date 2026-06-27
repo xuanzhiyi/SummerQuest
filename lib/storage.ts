@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3'
+import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 
 const BUCKET = process.env.R2_BUCKET_NAME!
@@ -66,6 +66,11 @@ export async function uploadAudio(
   )
 
   return key
+}
+
+export async function deleteObject(key: string): Promise<void> {
+  const client = getClient()
+  await client.send(new DeleteObjectCommand({ Bucket: BUCKET, Key: key }))
 }
 
 export async function getImageUrl(key: string): Promise<string> {

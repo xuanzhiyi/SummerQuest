@@ -8,6 +8,7 @@ interface Props {
   onSaved: (entry: unknown, points: number) => void
   initialText?: string
   initialLevel?: number
+  savedAudioKey?: string | null  // key of an existing R2 object to delete on re-record
 }
 
 type Stage = 'loading' | 'ready' | 'recording' | 'uploading' | 'done'
@@ -24,10 +25,12 @@ function formatSize(bytes: number) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
-export default function ReadingForm({ date, track, onSaved, initialText, initialLevel }: Props) {
+export default function ReadingForm({ date, track, onSaved, initialText, initialLevel, savedAudioKey }: Props) {
   const [text, setText] = useState<string | null>(initialText ?? null)
   const [level, setLevel] = useState<number>(initialLevel ?? 5)
   const [stage, setStage] = useState<Stage>(initialText ? 'ready' : 'loading')
+  // Track the R2 key of the most recently saved recording so we can delete it
+  const savedKeyRef = useRef<string | null>(savedAudioKey ?? null)
   const [error, setError] = useState('')
   const [audioUrl, setAudioUrl] = useState<string | null>(null)
   const [duration, setDuration] = useState(0)
@@ -165,6 +168,7 @@ export default function ReadingForm({ date, track, onSaved, initialText, initial
       const data = await safeJson(res)
       if (!res.ok) throw new Error((data.error as string) ?? `Upload error ${res.status}`)
       audioKey = data.key as string
+      savedKeyRef.current = audioKey
     } catch (e) {
       setError((e instanceof Error ? e.message : 'Upload failed') + ' — saving without audio.')
     }
@@ -190,7 +194,14 @@ export default function ReadingForm({ date, track, onSaved, initialText, initial
     }
   }
 
-  function deleteAndReRecord() {
+  async function deleteAndReRecord() {
+    // Delete the R2 object in the background (fire-and-forget — don't block the UI)
+    const keyToDelete = savedKeyRef.current
+    if (keyToDelete) {
+      savedKeyRef.current = null
+      fetch(`/api/upload/audio?key=${encodeURIComponent(keyToDelete)}`, { method: 'DELETE' })
+        .catch(() => {}) // ignore errors — R2 delete is best-effort
+    }
     if (audioUrl) URL.revokeObjectURL(audioUrl)
     setAudioUrl(null)
     setDuration(0)
