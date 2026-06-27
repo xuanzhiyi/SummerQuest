@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import SportForm from './SportForm'
 import PianoForm from './PianoForm'
 import BooksForm from './BooksForm'
@@ -23,6 +23,7 @@ interface Props {
 export default function QuestPageContent({ track, date, initialEntries, canEdit, showScores }: Props) {
   const [entries, setEntries] = useState(initialEntries)
   const [lastResult, setLastResult] = useState<{ score: number; points: number } | null>(null)
+  const [reRecording, setReRecording] = useState(false)
 
   function handleSaved(entry: unknown, points: number) {
     setEntries((prev) => [...prev, entry as Record<string, unknown>])
@@ -67,6 +68,22 @@ export default function QuestPageContent({ track, date, initialEntries, canEdit,
           onSaved={handleWordPairingSaved}
         />
       </div>
+    )
+  }
+
+  // Reading tracks: show audio player + re-record option instead of generic "already logged"
+  const isReadingTrack = track === 'chinese' || track === 'swedish' || track === 'french'
+  if (hasEntry && isReadingTrack) {
+    const latestEntry = entries[entries.length - 1]
+    if (reRecording) {
+      return <ReadingForm date={date} track={track as 'chinese' | 'swedish' | 'french'} onSaved={handleSaved} />
+    }
+    return (
+      <ReadingEntryCard
+        entry={latestEntry}
+        canEdit={canEdit}
+        onReRecord={() => setReRecording(true)}
+      />
     )
   }
 
@@ -203,5 +220,78 @@ function PointsBadge({ points }: { points: number }) {
     <span className="inline-block text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-medium">
       +{points} pts
     </span>
+  )
+}
+
+function ReadingEntryCard({
+  entry, canEdit, onReRecord,
+}: { entry: Record<string, unknown>; canEdit: boolean; onReRecord: () => void }) {
+  const [audioUrl, setAudioUrl] = useState<string | null>(null)
+  const [loadingAudio, setLoadingAudio] = useState(false)
+
+  const audioKey = entry.audio_key as string | null
+
+  useEffect(() => {
+    if (!audioKey) return
+    setLoadingAudio(true)
+    fetch(`/api/audio-url?key=${encodeURIComponent(audioKey)}`)
+      .then(r => r.json())
+      .then(d => { if (d.url) setAudioUrl(d.url) })
+      .catch(() => {})
+      .finally(() => setLoadingAudio(false))
+  }, [audioKey])
+
+  return (
+    <div className="space-y-3 pt-3">
+      {/* Text passage */}
+      <div className="bg-blue-50 rounded-xl p-4 text-base leading-relaxed whitespace-pre-wrap font-medium text-gray-800">
+        {String(entry.ai_generated_text)}
+      </div>
+
+      {/* Done banner */}
+      <div style={{ background: '#D1FAE5', borderRadius: 18, padding: '14px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div>
+          <p style={{ color: '#065F46', fontWeight: 800, fontSize: 15, margin: 0 }}>✓ Quest complete!</p>
+          <p style={{ color: '#059669', fontSize: 12, fontWeight: 600, margin: '2px 0 0' }}>
+            Level {String(entry.level_at_time)}/10 · +{String(entry.points_awarded)} pts
+          </p>
+        </div>
+        <span style={{ fontSize: 26 }}>🎉</span>
+      </div>
+
+      {/* Audio player */}
+      {audioKey && (
+        <div style={{ background: '#F9FAFB', borderRadius: 18, padding: '16px 18px' }}>
+          <p style={{ fontSize: 11, fontWeight: 800, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 1, margin: '0 0 10px' }}>
+            🎧 Your recording
+          </p>
+          {loadingAudio && (
+            <p style={{ fontSize: 13, color: '#9CA3AF', fontWeight: 600 }}>Loading audio…</p>
+          )}
+          {audioUrl && (
+            <audio controls src={audioUrl} style={{ width: '100%', borderRadius: 10 }} />
+          )}
+          {!loadingAudio && !audioUrl && (
+            <p style={{ fontSize: 13, color: '#9CA3AF' }}>Recording unavailable</p>
+          )}
+        </div>
+      )}
+
+      {!audioKey && (
+        <div style={{ background: '#F9FAFB', borderRadius: 18, padding: '14px 18px', textAlign: 'center' }}>
+          <p style={{ fontSize: 13, color: '#9CA3AF', fontWeight: 600, margin: 0 }}>No recording saved for this entry</p>
+        </div>
+      )}
+
+      {/* Re-record */}
+      {canEdit && (
+        <button
+          onClick={onReRecord}
+          style={{ width: '100%', background: '#FEF2F2', color: '#DC2626', border: '2px solid #FECACA', borderRadius: 18, padding: '16px', fontFamily: "'Nunito', sans-serif", fontSize: 15, fontWeight: 800, cursor: 'pointer' }}
+        >
+          🎙️ Record again
+        </button>
+      )}
+    </div>
   )
 }
