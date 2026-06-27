@@ -31,6 +31,7 @@ const ALL_QUESTS = [
   { track: 'finnish',              icon: '🇫🇮', title: 'Finnish / 芬兰语写作',      category: 'Mind'   },
   { track: 'science',              icon: '🔬', title: 'Science / 科学',             category: 'Mind'   },
   { track: 'ai_project',           icon: '🤖', title: 'AI Project / AI项目',       category: 'Mind'   },
+  { track: 'diary',                icon: '📓', title: 'Diary / 日记',               category: 'Mind'   },
 ] as const
 
 type Category = 'Active' | 'Mind' | 'Home' | 'Family'

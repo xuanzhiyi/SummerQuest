@@ -8,6 +8,7 @@ import WritingForm from './WritingForm'
 import ReadingForm from './ReadingForm'
 import ProblemSetForm from './ProblemSetForm'
 import AiProjectForm from './AiProjectForm'
+import DiaryForm from './DiaryForm'
 import WordPairingGame from '@/components/game/WordPairingGame'
 import { getRandomWords, PAIR_LABELS } from '@/lib/wordlists'
 import type { LanguagePair } from '@/lib/wordlists'
@@ -136,6 +137,7 @@ function TrackForm({ track, date, onSaved }: { track: string; date: string; onSa
     case 'math':       return <ProblemSetForm date={date} track="math" onSaved={onSaved} />
     case 'science':    return <ProblemSetForm date={date} track="science" onSaved={onSaved} />
     case 'ai_project': return <AiProjectForm date={date} onSaved={onSaved} />
+    case 'diary':      return <DiaryForm date={date} onSaved={onSaved} />
     default:           return null
   }
 }
@@ -201,6 +203,14 @@ function EntryCard({ track, entry, showScores }: { track: string; entry: Record<
             {String(entry.ai_generated_text)}
           </div>
           <p className="text-xs text-gray-400">Level {String(entry.level_at_time)}/10 · Read ✓</p>
+          <PointsBadge points={entry.points_awarded as number} />
+        </div>
+      )
+    case 'diary':
+      return (
+        <div className="bg-white rounded-xl p-4 shadow-sm text-sm space-y-2">
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">{String(entry.language)}</p>
+          <p className="text-gray-800 whitespace-pre-wrap leading-relaxed">{String(entry.entry_text)}</p>
           <PointsBadge points={entry.points_awarded as number} />
         </div>
       )

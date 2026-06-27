@@ -67,4 +67,4 @@ export interface DayTile {
   effort_signal: EffortSignal | null // null if no AI-graded entries that day
 }
 
-export const TOTAL_QUESTS = 15 // 11 regular tracks + 4 word pairing language pairs
+export const TOTAL_QUESTS = 16 // 12 regular tracks + 4 word pairing language pairs

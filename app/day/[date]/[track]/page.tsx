@@ -26,6 +26,7 @@ const TRACK_INFO: Record<string, { title: string; description: string }> = {
   word_english_chinese: { title: '🀄 Chinese words / 中文单词', description: 'Match English–Chinese word pairs. / 配对英语和中文单词' },
   word_english_swedish: { title: '🇸🇪 Swedish words / 瑞典单词', description: 'Match English–Swedish word pairs. / 配对英语和瑞典语单词' },
   word_english_french:  { title: '🇫🇷 French words / 法语单词',  description: 'Match English–French word pairs. / 配对英语和法语单词' },
+  diary:                { title: '📓 Diary / 日记',               description: 'Write a diary entry in any language. / 用任何语言写日记' },
 }
 
 export default async function QuestPage({ params }: Props) {
@@ -63,7 +64,7 @@ export default async function QuestPage({ params }: Props) {
       sport: 'entries_sport', math: 'entries_math', books: 'entries_books',
       english: 'entries_english', finnish: 'entries_finnish',
       chinese: 'entries_chinese', swedish: 'entries_swedish', french: 'entries_french',
-      science: 'entries_science', ai_project: 'entries_ai_project',
+      science: 'entries_science', ai_project: 'entries_ai_project', diary: 'entries_diary',
     }
     const table = tableMap[track]
     if (table) {

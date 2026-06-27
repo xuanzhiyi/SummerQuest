@@ -29,7 +29,7 @@ export default async function DayPage({ params }: Props) {
   }
   const canEdit = role === 'admin' || (role === 'child' && isToday(date))
 
-  const [books, english, finnish, chinese, swedish, french, math, science, aiProject, sport, piano, wordPairing, wordTargets, trackSettings] =
+  const [books, english, finnish, chinese, swedish, french, math, science, aiProject, sport, piano, diary, wordPairing, wordTargets, trackSettings] =
     await Promise.all([
       sql`SELECT * FROM entries_books      WHERE user_id = ${userId} AND date = ${date}`,
       sql`SELECT * FROM entries_english    WHERE user_id = ${userId} AND date = ${date}`,
@@ -42,6 +42,7 @@ export default async function DayPage({ params }: Props) {
       sql`SELECT * FROM entries_ai_project WHERE user_id = ${userId} AND date = ${date}`,
       sql`SELECT * FROM entries_sport      WHERE user_id = ${userId} AND date = ${date}`,
       sql`SELECT * FROM entries_piano      WHERE user_id = ${userId} AND date = ${date}`,
+      sql`SELECT * FROM entries_diary      WHERE user_id = ${userId} AND date = ${date}`,
       sql`SELECT language_pair, points_awarded FROM entries_word_pairing WHERE user_id = ${userId} AND date = ${date}`,
       sql`SELECT track, daily_target FROM track_settings WHERE track LIKE 'word_%'`,
       sql`SELECT track, points_per_entry FROM track_settings`,
@@ -67,6 +68,7 @@ export default async function DayPage({ params }: Props) {
     ai_project: aiProject as unknown[],
     sport: sport as unknown[],
     piano: piano as unknown[],
+    diary: diary as unknown[],
     ...wpByPair,
   }
 
@@ -77,7 +79,7 @@ export default async function DayPage({ params }: Props) {
   const earnedXP =
     sumPoints(books) + sumPoints(english) + sumPoints(finnish) + sumPoints(chinese) +
     sumPoints(swedish) + sumPoints(french) + sumPoints(math) + sumPoints(science) +
-    sumPoints(aiProject) + sumPoints(sport) + sumPoints(piano) + sumPoints(wordPairing)
+    sumPoints(aiProject) + sumPoints(sport) + sumPoints(piano) + sumPoints(diary) + sumPoints(wordPairing)
 
   const dailyTargets: Record<string, number> = {}
   for (const row of wordTargets) {

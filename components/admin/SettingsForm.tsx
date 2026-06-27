@@ -18,6 +18,7 @@ const TRACK_LABELS: Record<string, string> = {
   word_english_chinese: '🀄 Chinese words',
   word_english_swedish: '🇸🇪 Swedish words',
   word_english_french:  '🇫🇷 French words',
+  diary:                '📓 Diary',
 }
 
 const AI_GRADED = new Set(['english', 'finnish', 'math', 'science'])
