@@ -53,7 +53,8 @@ export async function uploadAudio(
   if (buffer.length > AUDIO_MAX_SIZE) throw new Error('Audio too large (max 20 MB)')
 
   const ext = normalised === 'audio/webm' ? 'webm' : normalised === 'audio/mp4' ? 'm4a' : normalised === 'audio/ogg' ? 'ogg' : 'audio'
-  const key = `reading/${track}/${userId}/${date}-${Date.now()}.${ext}`
+  const folder = track === 'piano' ? 'piano' : 'reading'
+  const key = `${folder}/${track}/${userId}/${date}-${Date.now()}.${ext}`
   const client = getClient()
 
   await client.send(

@@ -8,7 +8,7 @@ export async function GET(req: NextRequest) {
   if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const key = req.nextUrl.searchParams.get('key')
-  if (!key || !key.startsWith('reading/')) {
+  if (!key || (!key.startsWith('reading/') && !key.startsWith('piano/'))) {
     return NextResponse.json({ error: 'Invalid key' }, { status: 400 })
   }
 

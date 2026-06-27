@@ -41,7 +41,7 @@ export async function DELETE(req: NextRequest) {
   }
 
   const key = req.nextUrl.searchParams.get('key')
-  if (!key || !key.startsWith('reading/')) {
+  if (!key || (!key.startsWith('reading/') && !key.startsWith('piano/'))) {
     return NextResponse.json({ error: 'Invalid key' }, { status: 400 })
   }
 
