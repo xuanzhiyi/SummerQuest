@@ -20,13 +20,20 @@ const TRACK_LABELS: Record<string, string> = {
 }
 
 const AI_GRADED = new Set(['english', 'finnish', 'math', 'science'])
-const HAS_LEVEL = new Set(['english', 'finnish', 'chinese', 'swedish', 'french', 'math', 'science'])
+const HAS_LEVEL = new Set([
+  'english', 'finnish', 'chinese', 'swedish', 'french', 'math', 'science',
+  'word_english_finnish', 'word_english_chinese', 'word_english_swedish', 'word_english_french',
+])
+const HAS_DAILY_TARGET = new Set([
+  'word_english_finnish', 'word_english_chinese', 'word_english_swedish', 'word_english_french',
+])
 
 interface TrackSetting {
   track: string
   current_level: number
   effort_weight: number
   points_per_entry: number
+  daily_target: number
 }
 
 interface Threshold {
@@ -67,7 +74,7 @@ export default function SettingsForm({ settings, thresholds }: Props) {
     }
   }
 
-  function updateRow(track: string, field: keyof TrackSetting, value: number) {
+  function updateRow(track: string, field: keyof Omit<TrackSetting, 'track'>, value: number) {
     setRows((prev) =>
       prev.map((r) => (r.track === track ? { ...r, [field]: value } : r))
     )
@@ -127,6 +134,17 @@ export default function SettingsForm({ settings, thresholds }: Props) {
                     onBlur={(v) => saveSetting(row.track, 'current_level', v)}
                     saving={saving === row.track + 'current_level'}
                     saved={saved === row.track + 'current_level'}
+                  />
+                )}
+                {HAS_DAILY_TARGET.has(row.track) && (
+                  <SettingField
+                    label="Sets per day"
+                    value={row.daily_target}
+                    min={1} max={10}
+                    onChange={(v) => updateRow(row.track, 'daily_target', v)}
+                    onBlur={(v) => saveSetting(row.track, 'daily_target', v)}
+                    saving={saving === row.track + 'daily_target'}
+                    saved={saved === row.track + 'daily_target'}
                   />
                 )}
                 {AI_GRADED.has(row.track) && (

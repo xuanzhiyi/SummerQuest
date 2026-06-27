@@ -9,7 +9,7 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const { track, current_level, effort_weight, points_per_entry } = await req.json()
+  const { track, current_level, effort_weight, points_per_entry, daily_target } = await req.json()
   if (!track) return NextResponse.json({ error: 'Missing track' }, { status: 400 })
 
   const [updated] = await sql`
@@ -17,6 +17,7 @@ export async function PUT(req: NextRequest) {
       current_level    = COALESCE(${current_level ?? null}, current_level),
       effort_weight    = COALESCE(${effort_weight ?? null}, effort_weight),
       points_per_entry = COALESCE(${points_per_entry ?? null}, points_per_entry),
+      daily_target     = COALESCE(${daily_target ?? null}, daily_target),
       updated_at       = NOW()
     WHERE track = ${track}
     RETURNING *
