@@ -76,7 +76,15 @@ export default function QuestPageContent({ track, date, initialEntries, canEdit,
   if (hasEntry && isReadingTrack) {
     const latestEntry = entries[entries.length - 1]
     if (reRecording) {
-      return <ReadingForm date={date} track={track as 'chinese' | 'swedish' | 'french'} onSaved={handleSaved} />
+      return (
+        <ReadingForm
+          date={date}
+          track={track as 'chinese' | 'swedish' | 'french'}
+          onSaved={handleSaved}
+          initialText={latestEntry.ai_generated_text as string}
+          initialLevel={latestEntry.level_at_time as number}
+        />
+      )
     }
     return (
       <ReadingEntryCard

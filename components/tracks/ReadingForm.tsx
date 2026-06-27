@@ -6,6 +6,8 @@ interface Props {
   date: string
   track: 'chinese' | 'swedish' | 'french'
   onSaved: (entry: unknown, points: number) => void
+  initialText?: string
+  initialLevel?: number
 }
 
 type Stage = 'loading' | 'ready' | 'recording' | 'uploading' | 'done'
@@ -22,10 +24,10 @@ function formatSize(bytes: number) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
-export default function ReadingForm({ date, track, onSaved }: Props) {
-  const [text, setText] = useState<string | null>(null)
-  const [level, setLevel] = useState<number>(5)
-  const [stage, setStage] = useState<Stage>('loading')
+export default function ReadingForm({ date, track, onSaved, initialText, initialLevel }: Props) {
+  const [text, setText] = useState<string | null>(initialText ?? null)
+  const [level, setLevel] = useState<number>(initialLevel ?? 5)
+  const [stage, setStage] = useState<Stage>(initialText ? 'ready' : 'loading')
   const [error, setError] = useState('')
   const [audioUrl, setAudioUrl] = useState<string | null>(null)
   const [duration, setDuration] = useState(0)
@@ -40,6 +42,7 @@ export default function ReadingForm({ date, track, onSaved }: Props) {
   const levelRafRef = useRef<number | null>(null)
 
   useEffect(() => {
+    if (initialText) return // already have text — skip fetch
     fetch(`/api/entries/${track}`)
       .then(r => r.json())
       .then(d => {
@@ -47,7 +50,7 @@ export default function ReadingForm({ date, track, onSaved }: Props) {
         else setError(d.error ?? 'Could not load reading text')
       })
       .catch(() => setError('Could not load reading text'))
-  }, [track])
+  }, [track, initialText])
 
   useEffect(() => () => {
     if (timerRef.current) clearInterval(timerRef.current)
