@@ -11,27 +11,26 @@ interface Props {
   role: string
   dailyTargets?: Record<string, number>
   earnedXP: number
+  xpPerTrack?: Record<string, number>
   name: string
 }
 
-const TOTAL_QUESTS = 15
-
 const ALL_QUESTS = [
-  { track: 'sport',                icon: '🏃', title: 'Sport / 运动',              category: 'Active', xp: 10 },
-  { track: 'math',                 icon: '🔢', title: 'Math / 数学',               category: 'Mind',   xp: 10 },
-  { track: 'books',                icon: '📚', title: 'Books / 读书',              category: 'Mind',   xp: 10 },
-  { track: 'chinese',              icon: '🀄', title: 'Chinese / 中文阅读',         category: 'Mind',   xp: 10 },
-  { track: 'swedish',              icon: '🇸🇪', title: 'Swedish / 瑞典语',          category: 'Mind',   xp: 10 },
-  { track: 'french',               icon: '🇫🇷', title: 'French / 法语',             category: 'Mind',   xp: 10 },
-  { track: 'word_english_finnish', icon: '🇫🇮', title: 'Finnish words / 芬兰单词',  category: 'Mind',   xp: 10 },
-  { track: 'word_english_chinese', icon: '🀄', title: 'Chinese words / 中文单词',  category: 'Mind',   xp: 10 },
-  { track: 'word_english_swedish', icon: '🇸🇪', title: 'Swedish words / 瑞典单词', category: 'Mind',   xp: 10 },
-  { track: 'word_english_french',  icon: '🇫🇷', title: 'French words / 法语单词',  category: 'Mind',   xp: 10 },
-  { track: 'piano',                icon: '🎹', title: 'Piano / 钢琴',              category: 'Mind',   xp: 10 },
-  { track: 'english',              icon: '✍️', title: 'English / 英文写作',         category: 'Mind',   xp: 10 },
-  { track: 'finnish',              icon: '🇫🇮', title: 'Finnish / 芬兰语写作',      category: 'Mind',   xp: 10 },
-  { track: 'science',              icon: '🔬', title: 'Science / 科学',             category: 'Mind',   xp: 10 },
-  { track: 'ai_project',           icon: '🤖', title: 'AI Project / AI项目',       category: 'Mind',   xp: 10 },
+  { track: 'sport',                icon: '🏃', title: 'Sport / 运动',              category: 'Active' },
+  { track: 'math',                 icon: '🔢', title: 'Math / 数学',               category: 'Mind'   },
+  { track: 'books',                icon: '📚', title: 'Books / 读书',              category: 'Mind'   },
+  { track: 'chinese',              icon: '🀄', title: 'Chinese / 中文阅读',         category: 'Mind'   },
+  { track: 'swedish',              icon: '🇸🇪', title: 'Swedish / 瑞典语',          category: 'Mind'   },
+  { track: 'french',               icon: '🇫🇷', title: 'French / 法语',             category: 'Mind'   },
+  { track: 'word_english_finnish', icon: '🇫🇮', title: 'Finnish words / 芬兰单词',  category: 'Mind'   },
+  { track: 'word_english_chinese', icon: '🀄', title: 'Chinese words / 中文单词',  category: 'Mind'   },
+  { track: 'word_english_swedish', icon: '🇸🇪', title: 'Swedish words / 瑞典单词', category: 'Mind'   },
+  { track: 'word_english_french',  icon: '🇫🇷', title: 'French words / 法语单词',  category: 'Mind'   },
+  { track: 'piano',                icon: '🎹', title: 'Piano / 钢琴',              category: 'Mind'   },
+  { track: 'english',              icon: '✍️', title: 'English / 英文写作',         category: 'Mind'   },
+  { track: 'finnish',              icon: '🇫🇮', title: 'Finnish / 芬兰语写作',      category: 'Mind'   },
+  { track: 'science',              icon: '🔬', title: 'Science / 科学',             category: 'Mind'   },
+  { track: 'ai_project',           icon: '🤖', title: 'AI Project / AI项目',       category: 'Mind'   },
 ] as const
 
 type Category = 'Active' | 'Mind' | 'Home' | 'Family'
@@ -61,12 +60,13 @@ function progressLabel(track: string, entries: Record<string, unknown[]>, dailyT
   return `${count}/${target} sets`
 }
 
-export default function DayDetail({ date, entries, canEdit, role, dailyTargets, earnedXP, name }: Props) {
+export default function DayDetail({ date, entries, canEdit, role, dailyTargets, earnedXP, xpPerTrack, name }: Props) {
   const d = new Date(date + 'T12:00:00')
   const displayDate = d.toLocaleDateString('en', { weekday: 'long', month: 'long', day: 'numeric' })
 
+  const getXP = (track: string) => xpPerTrack?.[track] ?? 10
   const completedCount = ALL_QUESTS.filter(q => isDone(q.track, entries, dailyTargets)).length
-  const totalXP = TOTAL_QUESTS * 10
+  const totalXP = ALL_QUESTS.reduce((sum, q) => sum + getXP(q.track), 0)
   const pct = Math.round((earnedXP / totalXP) * 100)
 
   const pending = ALL_QUESTS.filter(q => !isDone(q.track, entries, dailyTargets))
@@ -135,7 +135,7 @@ export default function DayDetail({ date, entries, canEdit, role, dailyTargets, 
             <div style={{ height: '100%', width: `${pct}%`, background: 'linear-gradient(90deg, #F59E0B, #FBBF24)', transition: 'width 0.6s cubic-bezier(0.4,0,0.2,1)', borderRadius: 999 }} />
           </div>
           <p style={{ fontSize: 12, color: '#9CA3AF', fontWeight: 700, margin: 0 }}>
-            {completedCount} of {TOTAL_QUESTS} quests done today
+            {completedCount} of {ALL_QUESTS.length} quests done today
             {canEdit && ' — keep going! / 继续加油！'}
           </p>
         </div>
@@ -146,7 +146,7 @@ export default function DayDetail({ date, entries, canEdit, role, dailyTargets, 
             <p style={{ fontSize: 11, fontWeight: 800, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 2, marginBottom: 10 }}>
               To Do / 待完成
             </p>
-            {pending.map(q => <QuestCard key={q.track} quest={q} done={false} date={date} progress={progressLabel(q.track, entries, dailyTargets)} canEdit={canEdit} />)}
+            {pending.map(q => <QuestCard key={q.track} quest={q} done={false} date={date} progress={progressLabel(q.track, entries, dailyTargets)} canEdit={canEdit} xp={getXP(q.track)} />)}
           </div>
         )}
 
@@ -156,7 +156,7 @@ export default function DayDetail({ date, entries, canEdit, role, dailyTargets, 
             <p style={{ fontSize: 11, fontWeight: 800, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 2, marginBottom: 10 }}>
               Done / 已完成 ✓
             </p>
-            {completed.map(q => <QuestCard key={q.track} quest={q} done={true} date={date} progress={progressLabel(q.track, entries, dailyTargets)} canEdit={canEdit} />)}
+            {completed.map(q => <QuestCard key={q.track} quest={q} done={true} date={date} progress={progressLabel(q.track, entries, dailyTargets)} canEdit={canEdit} xp={getXP(q.track)} />)}
           </div>
         )}
       </div>
@@ -170,9 +170,10 @@ interface QuestCardProps {
   date: string
   progress: string | null
   canEdit: boolean
+  xp: number
 }
 
-function QuestCard({ quest, done, date, progress, canEdit }: QuestCardProps) {
+function QuestCard({ quest, done, date, progress, canEdit, xp }: QuestCardProps) {
   const cat = quest.category as Category
   const catStyle = CATEGORY_STYLE[cat]
 
@@ -218,7 +219,7 @@ function QuestCard({ quest, done, date, progress, canEdit }: QuestCardProps) {
               </span>
             ) : (
               <span style={{ fontSize: 11, fontWeight: 800, padding: '3px 10px', borderRadius: 20, background: done ? '#D1FAE5' : '#FEF3C7', color: done ? '#065F46' : '#92400E' }}>
-                ⭐ {quest.xp} XP
+                ⭐ {xp} XP
               </span>
             )}
           </div>

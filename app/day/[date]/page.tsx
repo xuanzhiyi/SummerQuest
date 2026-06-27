@@ -29,7 +29,7 @@ export default async function DayPage({ params }: Props) {
   }
   const canEdit = role === 'admin' || (role === 'child' && isToday(date))
 
-  const [books, english, finnish, chinese, swedish, french, math, science, aiProject, sport, piano, wordPairing, wordTargets] =
+  const [books, english, finnish, chinese, swedish, french, math, science, aiProject, sport, piano, wordPairing, wordTargets, trackSettings] =
     await Promise.all([
       sql`SELECT * FROM entries_books      WHERE user_id = ${userId} AND date = ${date}`,
       sql`SELECT * FROM entries_english    WHERE user_id = ${userId} AND date = ${date}`,
@@ -44,6 +44,7 @@ export default async function DayPage({ params }: Props) {
       sql`SELECT * FROM entries_piano      WHERE user_id = ${userId} AND date = ${date}`,
       sql`SELECT language_pair, points_awarded FROM entries_word_pairing WHERE user_id = ${userId} AND date = ${date}`,
       sql`SELECT track, daily_target FROM track_settings WHERE track LIKE 'word_%'`,
+      sql`SELECT track, points_per_entry FROM track_settings`,
     ])
 
   // Group word pairing by language pair
@@ -84,6 +85,12 @@ export default async function DayPage({ params }: Props) {
     dailyTargets[r.track as string] = r.daily_target as number
   }
 
+  const xpPerTrack: Record<string, number> = {}
+  for (const row of trackSettings) {
+    const r = row as Record<string, unknown>
+    xpPerTrack[r.track as string] = Number(r.points_per_entry) || 10
+  }
+
   return (
     <div className="max-w-lg mx-auto">
       <DayDetail
@@ -94,6 +101,7 @@ export default async function DayPage({ params }: Props) {
         role={role}
         dailyTargets={dailyTargets}
         earnedXP={earnedXP}
+        xpPerTrack={xpPerTrack}
         name={session.user.name ?? ''}
       />
     </div>
