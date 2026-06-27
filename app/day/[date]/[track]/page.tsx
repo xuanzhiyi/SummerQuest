@@ -40,7 +40,13 @@ export default async function QuestPage({ params }: Props) {
   if (role === 'child' && date > new Date().toISOString().slice(0, 10)) redirect('/')
 
   const canEdit = role === 'admin' || (role === 'child' && isToday(date))
-  const userId = parseInt(session.user.id)
+
+  // Viewer sees the child's data (read-only)
+  let userId = parseInt(session.user.id)
+  if (role === 'viewer') {
+    const [child] = await sql`SELECT id FROM users WHERE role = 'child' LIMIT 1`
+    if (child) userId = child.id as number
+  }
 
   // Load existing entries for this track/date
   let entries: unknown[] = []

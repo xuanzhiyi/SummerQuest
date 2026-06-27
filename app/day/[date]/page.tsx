@@ -25,7 +25,12 @@ export default async function DayPage({ params }: Props) {
     redirect('/')
   }
 
-  const userId = parseInt(session.user.id)
+  // Viewer sees the child's data (read-only)
+  let userId = parseInt(session.user.id)
+  if (role === 'viewer') {
+    const [child] = await sql`SELECT id FROM users WHERE role = 'child' LIMIT 1`
+    if (child) userId = child.id as number
+  }
   const canEdit = role === 'admin' || (role === 'child' && isToday(date))
 
   // Load all entries for this day
