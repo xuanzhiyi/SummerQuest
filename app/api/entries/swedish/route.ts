@@ -50,3 +50,21 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({ entry, points_awarded: points })
 }
+
+// PATCH — update audio_key on an existing entry (re-record, no XP change)
+export async function PATCH(req: NextRequest) {
+  const session = await auth()
+  if (!session || session.user.role === 'viewer') {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+  const { id, audio_key } = await req.json()
+  if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 })
+  const userId = parseInt(session.user.id)
+  const [entry] = await sql`
+    UPDATE entries_swedish SET audio_key = ${audio_key ?? null}
+    WHERE id = ${id} AND user_id = ${userId}
+    RETURNING *
+  `
+  if (!entry) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+  return NextResponse.json({ entry })
+}

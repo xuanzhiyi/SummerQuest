@@ -8,7 +8,8 @@ interface Props {
   onSaved: (entry: unknown, points: number) => void
   initialText?: string
   initialLevel?: number
-  savedAudioKey?: string | null  // key of an existing R2 object to delete on re-record
+  savedAudioKey?: string | null
+  savedEntryId?: number | null  // when set, PATCH the existing entry instead of POSTing a new one
 }
 
 type Stage = 'loading' | 'ready' | 'recording' | 'uploading' | 'done'
@@ -25,7 +26,7 @@ function formatSize(bytes: number) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
-export default function ReadingForm({ date, track, onSaved, initialText, initialLevel, savedAudioKey }: Props) {
+export default function ReadingForm({ date, track, onSaved, initialText, initialLevel, savedAudioKey, savedEntryId }: Props) {
   const [text, setText] = useState<string | null>(initialText ?? null)
   const [level, setLevel] = useState<number>(initialLevel ?? 5)
   const [stage, setStage] = useState<Stage>(initialText ? 'ready' : 'loading')
@@ -173,7 +174,30 @@ export default function ReadingForm({ date, track, onSaved, initialText, initial
       setError((e instanceof Error ? e.message : 'Upload failed') + ' — saving without audio.')
     }
 
-    // Save entry
+    // Re-recording an existing entry: PATCH audio_key only (no new XP)
+    if (savedEntryId) {
+      try {
+        const res = await fetch(`/api/entries/${track}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: savedEntryId, audio_key: audioKey }),
+        })
+        const data = await safeJson(res)
+        if (!res.ok) {
+          setError((data.error as string) ?? `Save error ${res.status}`)
+          setStage('ready')
+          return
+        }
+      } catch (e) {
+        setError(e instanceof Error ? e.message : 'Save failed')
+        setStage('ready')
+        return
+      }
+      setStage('done')
+      return
+    }
+
+    // First recording: POST new entry and award XP
     try {
       const res = await fetch(`/api/entries/${track}`, {
         method: 'POST',
