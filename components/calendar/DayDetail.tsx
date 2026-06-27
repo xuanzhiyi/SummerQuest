@@ -11,7 +11,7 @@ interface Props {
   dailyTargets?: Record<string, number>
 }
 
-const DAILY_QUESTS = [
+const ALL_QUESTS = [
   { track: 'sport',               title: '🏃 Sport',               bg: 'bg-orange-50 border-orange-200' },
   { track: 'math',                title: '🔢 Math',                bg: 'bg-blue-50 border-blue-200' },
   { track: 'books',               title: '📚 Books',               bg: 'bg-yellow-50 border-yellow-200' },
@@ -22,13 +22,10 @@ const DAILY_QUESTS = [
   { track: 'word_english_chinese',title: '🀄 Chinese words',       bg: 'bg-rose-50 border-rose-200' },
   { track: 'word_english_swedish',title: '🇸🇪 Swedish words',       bg: 'bg-cyan-50 border-cyan-200' },
   { track: 'word_english_french', title: '🇫🇷 French words',        bg: 'bg-violet-50 border-violet-200' },
-]
-
-const OCCASIONAL_QUESTS = [
-  { track: 'english',    title: '✍️ English writing', bg: 'bg-emerald-50 border-emerald-200' },
-  { track: 'finnish',    title: '🇫🇮 Finnish writing', bg: 'bg-lime-50 border-lime-200' },
-  { track: 'science',    title: '🔬 Science',          bg: 'bg-purple-50 border-purple-200' },
-  { track: 'ai_project', title: '🤖 AI Project',       bg: 'bg-pink-50 border-pink-200' },
+  { track: 'english',             title: '✍️ English writing',      bg: 'bg-emerald-50 border-emerald-200' },
+  { track: 'finnish',             title: '🇫🇮 Finnish writing',      bg: 'bg-lime-50 border-lime-200' },
+  { track: 'science',             title: '🔬 Science',              bg: 'bg-purple-50 border-purple-200' },
+  { track: 'ai_project',          title: '🤖 AI Project',           bg: 'bg-pink-50 border-pink-200' },
 ]
 
 function entryCount(track: string, entries: Record<string, unknown[]>): number {
@@ -69,72 +66,35 @@ export default function DayDetail({ date, entries, canEdit, role, dailyTargets }
         )}
       </div>
 
-      <section className="mb-6">
-        <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">
-          Daily activities
-        </h3>
-        <div className="grid grid-cols-3 gap-3">
-          {DAILY_QUESTS.map(({ track, title, bg }) => {
-            const done = isDone(track, entries, dailyTargets)
-            const progress = progressLabel(track, entries, dailyTargets)
-            return (
-              <Link
-                key={track}
-                href={`/day/${date}/${track}`}
-                className={`
-                  relative flex flex-col gap-1.5 p-4 min-h-[96px] rounded-xl border-2 transition-all
-                  hover:shadow-md active:scale-95
-                  ${bg}
-                  ${done ? 'opacity-90' : ''}
-                `}
-              >
-                <span className="font-semibold text-sm text-gray-900 leading-tight">{title}</span>
-                {done ? (
-                  <span className="text-xs text-green-600 font-medium">✓ Done{progress ? ` (${progress})` : ''}</span>
-                ) : progress ? (
-                  <span className="text-xs text-amber-600 font-medium">{progress} — keep going!</span>
-                ) : canEdit ? (
-                  <span className="text-xs text-amber-500 font-medium">Tap to log →</span>
-                ) : (
-                  <span className="text-xs text-gray-400">Not logged</span>
-                )}
-              </Link>
-            )
-          })}
-        </div>
-      </section>
-
-      <section>
-        <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">
-          Optional / occasional
-        </h3>
-        <div className="grid grid-cols-3 gap-3">
-          {OCCASIONAL_QUESTS.map(({ track, title, bg }) => {
-            const done = isDone(track, entries, dailyTargets)
-            return (
-              <Link
-                key={track}
-                href={`/day/${date}/${track}`}
-                className={`
-                  relative flex flex-col gap-1.5 p-4 min-h-[96px] rounded-xl border-2 transition-all
-                  hover:shadow-md active:scale-95
-                  ${bg}
-                  ${done ? 'opacity-90' : ''}
-                `}
-              >
-                <span className="font-semibold text-sm text-gray-900 leading-tight">{title}</span>
-                {done ? (
-                  <span className="text-xs text-green-600 font-medium">✓ Done</span>
-                ) : canEdit ? (
-                  <span className="text-xs text-amber-500 font-medium">Tap to log →</span>
-                ) : (
-                  <span className="text-xs text-gray-400">Not logged</span>
-                )}
-              </Link>
-            )
-          })}
-        </div>
-      </section>
+      <div className="grid grid-cols-3 gap-3">
+        {ALL_QUESTS.map(({ track, title, bg }) => {
+          const done = isDone(track, entries, dailyTargets)
+          const progress = progressLabel(track, entries, dailyTargets)
+          return (
+            <Link
+              key={track}
+              href={`/day/${date}/${track}`}
+              className={`
+                relative flex flex-col gap-1.5 p-4 min-h-[96px] rounded-xl border-2 transition-all
+                hover:shadow-md active:scale-95
+                ${bg}
+                ${done ? 'opacity-90' : ''}
+              `}
+            >
+              <span className="font-semibold text-sm text-gray-900 leading-tight">{title}</span>
+              {done ? (
+                <span className="text-xs text-green-600 font-medium">✓ Done{progress ? ` (${progress})` : ''}</span>
+              ) : progress ? (
+                <span className="text-xs text-amber-600 font-medium">{progress} — keep going!</span>
+              ) : canEdit ? (
+                <span className="text-xs text-amber-500 font-medium">Tap to log →</span>
+              ) : (
+                <span className="text-xs text-gray-400">Not logged</span>
+              )}
+            </Link>
+          )
+        })}
+      </div>
     </div>
   )
 }
