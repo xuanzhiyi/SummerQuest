@@ -68,8 +68,13 @@ export default function ReadingForm({ date, track, onSaved }: Props) {
     streamRef.current?.getTracks().forEach((t) => t.stop())
   }
 
+  async function safeJson(res: Response): Promise<Record<string, unknown>> {
+    try { return await res.json() } catch { return {} }
+  }
+
   async function handleRecordingStopped() {
     setStage('uploading')
+    setError('')
 
     const mimeType = mediaRecorderRef.current?.mimeType ?? 'audio/webm'
     const blob = new Blob(chunksRef.current, { type: mimeType })
@@ -85,28 +90,33 @@ export default function ReadingForm({ date, track, onSaved }: Props) {
         headers: { 'Content-Type': mimeType },
         body: blob,
       })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error ?? 'Upload failed')
-      audioKey = data.key
+      const data = await safeJson(res)
+      if (!res.ok) throw new Error((data.error as string) ?? `Upload error ${res.status}`)
+      audioKey = data.key as string
     } catch (e) {
+      // Non-fatal — still save the entry without audio
       setError((e instanceof Error ? e.message : 'Upload failed') + ' — saving without audio.')
     }
 
     // Save entry
-    const res = await fetch(`/api/entries/${track}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ date, ai_generated_text: text, level_at_time: level, audio_key: audioKey }),
-    })
-    const data = await res.json()
-    if (!res.ok) {
-      setError(data.error ?? 'Something went wrong saving the entry')
+    try {
+      const res = await fetch(`/api/entries/${track}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ date, ai_generated_text: text, level_at_time: level, audio_key: audioKey }),
+      })
+      const data = await safeJson(res)
+      if (!res.ok) {
+        setError((data.error as string) ?? `Save error ${res.status}`)
+        setStage('ready')
+        return
+      }
+      setStage('done')
+      onSaved(data.entry as unknown, data.points_awarded as number)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Save failed')
       setStage('ready')
-      return
     }
-
-    setStage('done')
-    onSaved(data.entry, data.points_awarded)
   }
 
   function reRecord() {
