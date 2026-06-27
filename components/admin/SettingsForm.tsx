@@ -13,6 +13,7 @@ const TRACK_LABELS: Record<string, string> = {
   french:               '🇫🇷 French',
   science:              '🔬 Science',
   ai_project:           '🤖 AI Project',
+  piano:                '🎹 Piano',
   word_english_finnish: '🇫🇮 Finnish words',
   word_english_chinese: '🀄 Chinese words',
   word_english_swedish: '🇸🇪 Swedish words',

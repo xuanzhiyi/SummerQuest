@@ -14,6 +14,7 @@ const TRACK_LABELS: Record<string, string> = {
   french:               '🇫🇷 French / 法语',
   science:              '🔬 Science / 科学',
   ai_project:           '🤖 AI Project / AI项目',
+  piano:                '🎹 Piano / 钢琴',
   word_english_finnish: '🇫🇮 Finnish words / 芬兰单词',
   word_english_chinese: '🀄 Chinese words / 中文单词',
   word_english_swedish: '🇸🇪 Swedish words / 瑞典单词',

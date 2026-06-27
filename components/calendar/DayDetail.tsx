@@ -22,6 +22,7 @@ const ALL_QUESTS = [
   { track: 'word_english_chinese',title: '🀄 Chinese words / 中文单词',    bg: 'bg-rose-50 border-rose-200' },
   { track: 'word_english_swedish',title: '🇸🇪 Swedish words / 瑞典单词',   bg: 'bg-cyan-50 border-cyan-200' },
   { track: 'word_english_french', title: '🇫🇷 French words / 法语单词',    bg: 'bg-violet-50 border-violet-200' },
+  { track: 'piano',               title: '🎹 Piano / 钢琴',               bg: 'bg-slate-50 border-slate-200' },
   { track: 'english',             title: '✍️ English / 英文写作',          bg: 'bg-emerald-50 border-emerald-200' },
   { track: 'finnish',             title: '🇫🇮 Finnish / 芬兰语写作',        bg: 'bg-lime-50 border-lime-200' },
   { track: 'science',             title: '🔬 Science / 科学',              bg: 'bg-purple-50 border-purple-200' },

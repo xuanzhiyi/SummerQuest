@@ -55,7 +55,7 @@ async function getStreak(userId: number, track: Track): Promise<number> {
 
 export async function getAllProgress(userId: number): Promise<TrackProgress[]> {
   const TRACKS: Track[] = [
-    'sport', 'math', 'books', 'english', 'finnish',
+    'sport', 'piano', 'math', 'books', 'english', 'finnish',
     'chinese', 'swedish', 'french', 'science', 'ai_project',
   ]
 
@@ -87,6 +87,8 @@ export async function getAllProgress(userId: number): Promise<TrackProgress[]> {
       SELECT 'ai_project' AS track, ts.points_per_entry AS pts FROM entries_ai_project  JOIN track_settings ts ON ts.track = 'ai_project'  WHERE user_id = ${userId}
       UNION ALL
       SELECT 'sport'      AS track, ts.points_per_entry AS pts FROM entries_sport       JOIN track_settings ts ON ts.track = 'sport'       WHERE user_id = ${userId}
+      UNION ALL
+      SELECT 'piano'      AS track, ts.points_per_entry AS pts FROM entries_piano       JOIN track_settings ts ON ts.track = 'piano'       WHERE user_id = ${userId}
     ) x GROUP BY track
   `
 

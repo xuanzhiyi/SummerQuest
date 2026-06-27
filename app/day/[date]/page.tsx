@@ -34,7 +34,7 @@ export default async function DayPage({ params }: Props) {
   const canEdit = role === 'admin' || (role === 'child' && isToday(date))
 
   // Load all entries for this day
-  const [books, english, finnish, chinese, swedish, french, math, science, aiProject, sport, wordPairing, wordTargets] =
+  const [books, english, finnish, chinese, swedish, french, math, science, aiProject, sport, piano, wordPairing, wordTargets] =
     await Promise.all([
       sql`SELECT * FROM entries_books      WHERE user_id = ${userId} AND date = ${date}`,
       sql`SELECT * FROM entries_english    WHERE user_id = ${userId} AND date = ${date}`,
@@ -46,6 +46,7 @@ export default async function DayPage({ params }: Props) {
       sql`SELECT * FROM entries_science    WHERE user_id = ${userId} AND date = ${date}`,
       sql`SELECT * FROM entries_ai_project WHERE user_id = ${userId} AND date = ${date}`,
       sql`SELECT * FROM entries_sport      WHERE user_id = ${userId} AND date = ${date}`,
+      sql`SELECT * FROM entries_piano      WHERE user_id = ${userId} AND date = ${date}`,
       sql`SELECT language_pair FROM entries_word_pairing WHERE user_id = ${userId} AND date = ${date}`,
       sql`SELECT track, daily_target FROM track_settings WHERE track LIKE 'word_%'`,
     ])
@@ -69,6 +70,7 @@ export default async function DayPage({ params }: Props) {
     science: science as unknown[],
     ai_project: aiProject as unknown[],
     sport: sport as unknown[],
+    piano: piano as unknown[],
     ...wpByPair,
   }
 

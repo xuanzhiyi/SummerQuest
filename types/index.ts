@@ -11,6 +11,7 @@ export type Track =
   | 'science'
   | 'ai_project'
   | 'sport'
+  | 'piano'
 
 export const AI_GRADED_TRACKS: Track[] = ['english', 'finnish', 'math', 'science']
 export const READING_TRACKS: Track[] = ['chinese', 'swedish', 'french']
@@ -66,4 +67,4 @@ export interface DayTile {
   effort_signal: EffortSignal | null // null if no AI-graded entries that day
 }
 
-export const TOTAL_QUESTS = 14 // 10 regular tracks + 4 word pairing language pairs
+export const TOTAL_QUESTS = 15 // 11 regular tracks + 4 word pairing language pairs

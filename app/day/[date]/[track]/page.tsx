@@ -11,6 +11,7 @@ interface Props {
 }
 
 const TRACK_INFO: Record<string, { title: string; description: string }> = {
+  piano:          { title: '🎹 Piano / 钢琴',             description: 'Log your piano practice. / 记录今天的钢琴练习' },
   sport:          { title: '🏃 Sport / 运动',              description: 'Log your physical activity for today. / 记录今天的运动' },
   math:           { title: '🔢 Math / 数学',               description: 'Solve AI-generated math problems. / 完成数学题' },
   books:          { title: '📚 Books / 读书',              description: 'Log a book you read and answer a question. / 记录读书内容' },

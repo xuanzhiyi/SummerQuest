@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import SportForm from './SportForm'
+import PianoForm from './PianoForm'
 import BooksForm from './BooksForm'
 import WritingForm from './WritingForm'
 import ReadingForm from './ReadingForm'
@@ -91,6 +92,7 @@ export default function QuestPageContent({ track, date, initialEntries, canEdit,
 function TrackForm({ track, date, onSaved }: { track: string; date: string; onSaved: (e: unknown, pts: number) => void }) {
   switch (track) {
     case 'sport':      return <SportForm date={date} onSaved={onSaved} />
+    case 'piano':      return <PianoForm date={date} onSaved={onSaved} />
     case 'books':      return <BooksForm date={date} onSaved={onSaved} />
     case 'english':    return <WritingForm date={date} track="english" onSaved={onSaved} />
     case 'finnish':    return <WritingForm date={date} track="finnish" onSaved={onSaved} />
@@ -131,6 +133,14 @@ function EntryCard({ track, entry, showScores }: { track: string; entry: Record<
       return (
         <div className="bg-white rounded-xl p-4 shadow-sm text-sm space-y-1">
           <p className="font-medium">{String(entry.activity)}</p>
+          <p className="text-gray-500">{String(entry.duration_minutes)} minutes</p>
+          <PointsBadge points={entry.points_awarded as number} />
+        </div>
+      )
+    case 'piano':
+      return (
+        <div className="bg-white rounded-xl p-4 shadow-sm text-sm space-y-1">
+          <p className="font-medium">🎹 {String(entry.piece)}</p>
           <p className="text-gray-500">{String(entry.duration_minutes)} minutes</p>
           <PointsBadge points={entry.points_awarded as number} />
         </div>
