@@ -73,7 +73,7 @@ export default function DayDetail({ date, entries, canEdit, role, dailyTargets }
         <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">
           Daily activities
         </h3>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-3 gap-3">
           {DAILY_QUESTS.map(({ track, title, bg }) => {
             const done = isDone(track, entries, dailyTargets)
             const progress = progressLabel(track, entries, dailyTargets)
@@ -82,7 +82,7 @@ export default function DayDetail({ date, entries, canEdit, role, dailyTargets }
                 key={track}
                 href={`/day/${date}/${track}`}
                 className={`
-                  relative flex flex-col gap-1.5 p-4 rounded-xl border-2 transition-all
+                  relative flex flex-col gap-1.5 p-4 min-h-[96px] rounded-xl border-2 transition-all
                   hover:shadow-md active:scale-95
                   ${bg}
                   ${done ? 'opacity-90' : ''}
@@ -108,7 +108,7 @@ export default function DayDetail({ date, entries, canEdit, role, dailyTargets }
         <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">
           Optional / occasional
         </h3>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-3 gap-3">
           {OCCASIONAL_QUESTS.map(({ track, title, bg }) => {
             const done = isDone(track, entries, dailyTargets)
             return (
@@ -116,7 +116,7 @@ export default function DayDetail({ date, entries, canEdit, role, dailyTargets }
                 key={track}
                 href={`/day/${date}/${track}`}
                 className={`
-                  relative flex flex-col gap-1.5 p-4 rounded-xl border-2 transition-all
+                  relative flex flex-col gap-1.5 p-4 min-h-[96px] rounded-xl border-2 transition-all
                   hover:shadow-md active:scale-95
                   ${bg}
                   ${done ? 'opacity-90' : ''}
