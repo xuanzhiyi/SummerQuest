@@ -62,5 +62,8 @@ export interface RewardThreshold {
 export interface DayTile {
   date: string // YYYY-MM-DD
   total_points: number
+  completed_quests: number  // distinct tracks with at least one entry
   effort_signal: EffortSignal | null // null if no AI-graded entries that day
 }
+
+export const TOTAL_QUESTS = 14 // 10 regular tracks + 4 word pairing language pairs

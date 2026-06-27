@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { type DayTile, EFFORT_SIGNAL_LABEL } from '@/types'
+import { type DayTile, EFFORT_SIGNAL_LABEL, TOTAL_QUESTS } from '@/types'
 
 interface Props {
   tiles: DayTile[]
@@ -102,9 +102,9 @@ function Tile({ tile }: { tile: DayTile }) {
       <span className={`text-base font-bold leading-none ${today ? 'text-white' : future ? 'text-gray-300' : 'text-gray-700'}`}>
         {dayNum}
       </span>
-      {hasActivity && (
+      {tile.completed_quests > 0 && (
         <span className={`text-[10px] font-semibold leading-tight ${today ? 'text-white/90' : 'text-amber-600'}`}>
-          +{tile.total_points} pts
+          {tile.completed_quests}/{TOTAL_QUESTS}
         </span>
       )}
       {effortEmoji && (

@@ -1,5 +1,5 @@
 import sql from './db'
-import { scoreToEffortSignal, type DayTile, type EffortSignal } from '@/types'
+import { scoreToEffortSignal, type DayTile, type EffortSignal, TOTAL_QUESTS } from '@/types'
 
 export const PROGRAM_START = '2026-06-26'
 export const PROGRAM_END = '2026-08-12'
@@ -54,6 +54,39 @@ export async function getCalendarTiles(userId: number): Promise<DayTile[]> {
     SELECT date, total_points FROM daily
   `
 
+  // Count distinct completed quests per day
+  const questCountRows = await sql`
+    SELECT date, COUNT(DISTINCT track) AS quest_count FROM (
+      SELECT date, 'books'       AS track FROM entries_books       WHERE user_id = ${userId}
+      UNION ALL
+      SELECT date, 'english'              FROM entries_english      WHERE user_id = ${userId}
+      UNION ALL
+      SELECT date, 'finnish'              FROM entries_finnish      WHERE user_id = ${userId}
+      UNION ALL
+      SELECT date, 'chinese'              FROM entries_chinese      WHERE user_id = ${userId}
+      UNION ALL
+      SELECT date, 'swedish'              FROM entries_swedish      WHERE user_id = ${userId}
+      UNION ALL
+      SELECT date, 'french'               FROM entries_french       WHERE user_id = ${userId}
+      UNION ALL
+      SELECT date, 'math'                 FROM entries_math         WHERE user_id = ${userId}
+      UNION ALL
+      SELECT date, 'science'              FROM entries_science      WHERE user_id = ${userId}
+      UNION ALL
+      SELECT date, 'ai_project'           FROM entries_ai_project   WHERE user_id = ${userId}
+      UNION ALL
+      SELECT date, 'sport'                FROM entries_sport        WHERE user_id = ${userId}
+      UNION ALL
+      SELECT date, 'word_' || language_pair FROM entries_word_pairing WHERE user_id = ${userId}
+    ) all_tracks
+    GROUP BY date
+  `
+
+  const questCountMap = new Map<string, number>()
+  for (const row of questCountRows) {
+    questCountMap.set(String(row.date).slice(0, 10), Number(row.quest_count))
+  }
+
   // Gather weighted AI scores per day (english, finnish, math, science only)
   const signalRows = await sql`
     WITH ai_entries AS (
@@ -86,6 +119,7 @@ export async function getCalendarTiles(userId: number): Promise<DayTile[]> {
   return programDates().map((date) => ({
     date,
     total_points: pointsMap.get(date) ?? 0,
+    completed_quests: questCountMap.get(date) ?? 0,
     effort_signal: signalMap.get(date) ?? null,
   }))
 }
