@@ -20,9 +20,22 @@ export async function POST(req: NextRequest) {
   }
 
   const trackName = `word_${language_pair}`
-  const [settings] = await sql`SELECT points_per_entry FROM track_settings WHERE track = ${trackName} AND child_user_id = ${userId}`
+  const [settings] = await sql`SELECT points_per_entry, daily_point_cap FROM track_settings WHERE track = ${trackName} AND child_user_id = ${userId}`
   const basePoints = settings?.points_per_entry ?? 10
-  const points = Math.round(basePoints * (score / 100))
+  const earnedRaw = Math.round(basePoints * (score / 100))
+
+  // Enforce daily point cap if set
+  let points = earnedRaw
+  if (settings?.daily_point_cap != null) {
+    const [totRow] = await sql`
+      SELECT COALESCE(SUM(points_awarded), 0) AS total
+      FROM entries_word_pairing
+      WHERE user_id = ${userId} AND date = ${date} AND language_pair = ${language_pair}
+    `
+    const alreadyEarned = Number(totRow.total)
+    const remaining = Math.max(0, settings.daily_point_cap - alreadyEarned)
+    points = Math.min(earnedRaw, remaining)
+  }
 
   const [entry] = await sql`
     INSERT INTO entries_word_pairing (user_id, date, language_pair, words_shown, results, score, points_awarded)

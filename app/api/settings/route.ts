@@ -10,7 +10,7 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const { track, child_user_id, current_level, effort_weight, points_per_entry, daily_target } = await req.json()
+  const { track, child_user_id, current_level, effort_weight, points_per_entry, daily_target, daily_point_cap } = await req.json()
   if (!track || !child_user_id) return NextResponse.json({ error: 'Missing track or child_user_id' }, { status: 400 })
 
   // Guardian can only edit settings for their linked children
@@ -26,6 +26,7 @@ export async function PUT(req: NextRequest) {
       effort_weight    = COALESCE(${effort_weight ?? null}, effort_weight),
       points_per_entry = COALESCE(${points_per_entry ?? null}, points_per_entry),
       daily_target     = COALESCE(${daily_target ?? null}, daily_target),
+      daily_point_cap  = COALESCE(${daily_point_cap ?? null}, daily_point_cap),
       updated_at       = NOW()
     WHERE track = ${track} AND child_user_id = ${child_user_id}
     RETURNING *

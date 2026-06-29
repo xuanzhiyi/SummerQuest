@@ -29,6 +29,9 @@ const HAS_LEVEL = new Set([
 const HAS_DAILY_TARGET = new Set([
   'word_english_finnish', 'word_english_chinese', 'word_english_swedish', 'word_english_french',
 ])
+const HAS_POINT_CAP = new Set([
+  'word_english_finnish', 'word_english_chinese', 'word_english_swedish', 'word_english_french',
+])
 
 interface TrackSetting {
   track: string
@@ -36,6 +39,7 @@ interface TrackSetting {
   effort_weight: number
   points_per_entry: number
   daily_target: number
+  daily_point_cap: number | null
 }
 
 interface Threshold {
@@ -77,7 +81,7 @@ export default function SettingsForm({ settings, thresholds, childUserId }: Prop
     }
   }
 
-  function updateRow(track: string, field: keyof Omit<TrackSetting, 'track'>, value: number) {
+  function updateRow(track: string, field: keyof Omit<TrackSetting, 'track' | 'daily_point_cap'> | 'daily_point_cap', value: number) {
     setRows((prev) =>
       prev.map((r) => (r.track === track ? { ...r, [field]: value } : r))
     )
@@ -148,6 +152,17 @@ export default function SettingsForm({ settings, thresholds, childUserId }: Prop
                     onBlur={(v) => saveSetting(row.track, 'daily_target', v)}
                     saving={saving === row.track + 'daily_target'}
                     saved={saved === row.track + 'daily_target'}
+                  />
+                )}
+                {HAS_POINT_CAP.has(row.track) && (
+                  <SettingField
+                    label="Daily point cap"
+                    value={row.daily_point_cap ?? 30}
+                    min={1} max={500}
+                    onChange={(v) => updateRow(row.track, 'daily_point_cap', v)}
+                    onBlur={(v) => saveSetting(row.track, 'daily_point_cap', v)}
+                    saving={saving === row.track + 'daily_point_cap'}
+                    saved={saved === row.track + 'daily_point_cap'}
                   />
                 )}
                 {AI_GRADED.has(row.track) && (
