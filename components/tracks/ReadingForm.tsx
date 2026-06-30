@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import RubyText from '@/components/ui/RubyText'
 
 interface Props {
   date: string
@@ -244,8 +245,10 @@ export default function ReadingForm({ date, track, onSaved, initialText, initial
   return (
     <div className="space-y-4 pt-3">
       {/* Reading passage */}
-      <div className="bg-blue-50 rounded-xl p-4 text-base leading-relaxed whitespace-pre-wrap font-medium text-gray-800">
-        {text}
+      <div className="bg-blue-50 rounded-xl p-4 text-base font-medium text-gray-800">
+        {track === 'chinese'
+          ? <RubyText text={text ?? ''} />
+          : <div className="leading-relaxed whitespace-pre-wrap">{text}</div>}
       </div>
 
       {error && <p className="text-red-500 text-sm font-medium">{error}</p>}

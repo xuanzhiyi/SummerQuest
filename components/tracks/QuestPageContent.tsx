@@ -13,6 +13,7 @@ import WordPairingGame from '@/components/game/WordPairingGame'
 import { getRandomWords, PAIR_LABELS } from '@/lib/wordlists'
 import type { LanguagePair } from '@/lib/wordlists'
 import MathText from '@/components/ui/MathText'
+import RubyText from '@/components/ui/RubyText'
 
 interface Props {
   track: string
@@ -95,6 +96,7 @@ export default function QuestPageContent({ track, date, initialEntries, canEdit,
         entry={latestEntry}
         canEdit={canEdit}
         onReRecord={() => setReRecording(true)}
+        track={track}
       />
     )
   }
@@ -201,8 +203,10 @@ function EntryCard({ track, entry, showScores }: { track: string; entry: Record<
     case 'chinese': case 'swedish': case 'french': case 'english-reading': case 'finnish-reading':
       return (
         <div className="bg-white rounded-xl p-4 shadow-sm text-sm space-y-2">
-          <div className="bg-blue-50 rounded-lg p-3 font-medium text-gray-800 whitespace-pre-wrap">
-            {String(entry.ai_generated_text)}
+          <div className="bg-blue-50 rounded-lg p-3 font-medium text-gray-800">
+            {track === 'chinese'
+              ? <RubyText text={String(entry.ai_generated_text)} />
+              : <div className="whitespace-pre-wrap">{String(entry.ai_generated_text)}</div>}
           </div>
           <p className="text-xs text-gray-400">Level {String(entry.level_at_time)}/10 · Read ✓</p>
           <PointsBadge points={entry.points_awarded as number} />
@@ -251,8 +255,8 @@ function PointsBadge({ points }: { points: number }) {
 }
 
 function ReadingEntryCard({
-  entry, canEdit, onReRecord,
-}: { entry: Record<string, unknown>; canEdit: boolean; onReRecord: () => void }) {
+  entry, canEdit, onReRecord, track,
+}: { entry: Record<string, unknown>; canEdit: boolean; onReRecord: () => void; track: string }) {
   const [audioUrl, setAudioUrl] = useState<string | null>(null)
   const [loadingAudio, setLoadingAudio] = useState(false)
 
@@ -271,8 +275,10 @@ function ReadingEntryCard({
   return (
     <div className="space-y-3 pt-3">
       {/* Text passage */}
-      <div className="bg-blue-50 rounded-xl p-4 text-base leading-relaxed whitespace-pre-wrap font-medium text-gray-800">
-        {String(entry.ai_generated_text)}
+      <div className="bg-blue-50 rounded-xl p-4 text-base font-medium text-gray-800">
+        {track === 'chinese'
+          ? <RubyText text={String(entry.ai_generated_text)} />
+          : <div className="leading-relaxed whitespace-pre-wrap">{String(entry.ai_generated_text)}</div>}
       </div>
 
       {/* Done banner */}

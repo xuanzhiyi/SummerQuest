@@ -41,9 +41,16 @@ export function chineseReadingPrompt(level: number): string {
 The passage should be:
 - 80-150 characters long (shorter for lower levels, longer for higher)
 - On an interesting topic for a teenager (nature, tech, sports, daily life, etc.)
-- Include pinyin if level is 3 or below
 
-Return only the passage (and pinyin if applicable), nothing else.`
+Pinyin formatting — this is important:
+- Do NOT write pinyin as a separate line or paragraph.
+- Instead, wrap each Chinese word/character that needs pinyin inline using this exact syntax: {字|zì} — the Chinese text first, then a pipe "|", then its pinyin (with tone marks), inside curly braces. Example: {你好|nǐ hǎo}.
+- Plain Chinese text that does not need pinyin should be written normally, with no braces.
+- If level is 3 or below, annotate EVERY word/character with pinyin this way.
+- If level is 4-10, only annotate words that are genuinely difficult or uncommon for that level — leave easy/common characters unannotated.
+- Punctuation stays outside the braces.
+
+Return only the passage using this inline annotation syntax, nothing else — no separate pinyin paragraph, no explanations.`
 }
 
 export function swedishReadingPrompt(level: number): string {
