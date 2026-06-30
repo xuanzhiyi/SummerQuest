@@ -19,7 +19,9 @@ const TRACK_INFO: Record<string, { title: string; description: string }> = {
   finnish:        { title: '🇫🇮 Finnish / 芬兰语写作',      description: 'Write a paragraph in Finnish. / 用芬兰语写一段话' },
   chinese:        { title: '🀄 Chinese / 中文阅读',         description: 'Read an AI-generated Chinese text. / 阅读中文文章' },
   swedish:        { title: '🇸🇪 Swedish / 瑞典语',          description: 'Read an AI-generated Swedish text. / 阅读瑞典语文章' },
-  french:         { title: '🇫🇷 French / 法语',             description: 'Read an AI-generated French text. / 阅读法语文章' },
+  french:           { title: '🇫🇷 French / 法语',               description: 'Read an AI-generated French text. / 阅读法语文章' },
+  'english-reading': { title: '📖 English Reading / 英文阅读', description: 'Read an AI-generated English passage aloud. / 大声朗读英文段落' },
+  'finnish-reading': { title: '📖 Finnish Reading / 芬兰语阅读', description: 'Read an AI-generated Finnish passage aloud. / 大声朗读芬兰语段落' },
   science:        { title: '🔬 Science / 科学',            description: 'Explore a science problem set. / 探索科学题' },
   ai_project:     { title: '🤖 AI Project / AI项目',       description: 'Document your AI project. / 记录AI项目' },
   word_english_finnish: { title: '🇫🇮 Finnish words / 芬兰单词', description: 'Match English–Finnish word pairs. / 配对英语和芬兰语单词' },
@@ -65,6 +67,7 @@ export default async function QuestPage({ params }: Props) {
       sport: 'entries_sport', math: 'entries_math', books: 'entries_books',
       english: 'entries_english', finnish: 'entries_finnish',
       chinese: 'entries_chinese', swedish: 'entries_swedish', french: 'entries_french',
+      'english-reading': 'entries_english_reading', 'finnish-reading': 'entries_finnish_reading',
       science: 'entries_science', ai_project: 'entries_ai_project', diary: 'entries_diary',
     }
     const table = tableMap[track]

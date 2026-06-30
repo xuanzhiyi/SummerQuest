@@ -50,7 +50,11 @@ export async function getCalendarTiles(userId: number): Promise<DayTile[]> {
         UNION ALL
         SELECT date, points_per_entry AS pts FROM entries_piano      JOIN track_settings ON track_settings.track = 'piano'       AND track_settings.child_user_id = ${userId} WHERE entries_piano.user_id      = ${userId}
         UNION ALL
-        SELECT date, points_per_entry AS pts FROM entries_diary      JOIN track_settings ON track_settings.track = 'diary'       AND track_settings.child_user_id = ${userId} WHERE entries_diary.user_id      = ${userId}
+        SELECT date, points_per_entry AS pts FROM entries_diary            JOIN track_settings ON track_settings.track = 'diary'            AND track_settings.child_user_id = ${userId} WHERE entries_diary.user_id           = ${userId}
+        UNION ALL
+        SELECT date, points_per_entry AS pts FROM entries_english_reading JOIN track_settings ON track_settings.track = 'english_reading' AND track_settings.child_user_id = ${userId} WHERE entries_english_reading.user_id = ${userId}
+        UNION ALL
+        SELECT date, points_per_entry AS pts FROM entries_finnish_reading JOIN track_settings ON track_settings.track = 'finnish_reading' AND track_settings.child_user_id = ${userId} WHERE entries_finnish_reading.user_id = ${userId}
         UNION ALL
         SELECT date, points_awarded   AS pts FROM entries_word_pairing WHERE user_id = ${userId}
       ) all_entries
@@ -83,7 +87,11 @@ export async function getCalendarTiles(userId: number): Promise<DayTile[]> {
       UNION ALL
       SELECT date, 'piano'                FROM entries_piano        WHERE user_id = ${userId}
       UNION ALL
-      SELECT date, 'diary'                FROM entries_diary        WHERE user_id = ${userId}
+      SELECT date, 'diary'            FROM entries_diary            WHERE user_id = ${userId}
+      UNION ALL
+      SELECT date, 'english_reading'  FROM entries_english_reading  WHERE user_id = ${userId}
+      UNION ALL
+      SELECT date, 'finnish_reading'  FROM entries_finnish_reading  WHERE user_id = ${userId}
       UNION ALL
       SELECT date, 'word_' || language_pair FROM entries_word_pairing WHERE user_id = ${userId}
     ) all_tracks
@@ -146,7 +154,11 @@ export async function getTrackTotals(userId: number) {
       UNION ALL
       SELECT 'piano'      AS track, points_per_entry AS pts FROM entries_piano      JOIN track_settings ON track_settings.track = 'piano'       AND track_settings.child_user_id = ${userId} WHERE entries_piano.user_id      = ${userId}
       UNION ALL
-      SELECT 'diary'      AS track, points_per_entry AS pts FROM entries_diary      JOIN track_settings ON track_settings.track = 'diary'       AND track_settings.child_user_id = ${userId} WHERE entries_diary.user_id      = ${userId}
+      SELECT 'diary'            AS track, points_per_entry AS pts FROM entries_diary            JOIN track_settings ON track_settings.track = 'diary'            AND track_settings.child_user_id = ${userId} WHERE entries_diary.user_id           = ${userId}
+      UNION ALL
+      SELECT 'english_reading'  AS track, points_per_entry AS pts FROM entries_english_reading JOIN track_settings ON track_settings.track = 'english_reading' AND track_settings.child_user_id = ${userId} WHERE entries_english_reading.user_id = ${userId}
+      UNION ALL
+      SELECT 'finnish_reading'  AS track, points_per_entry AS pts FROM entries_finnish_reading JOIN track_settings ON track_settings.track = 'finnish_reading' AND track_settings.child_user_id = ${userId} WHERE entries_finnish_reading.user_id = ${userId}
     ) all_entries
     GROUP BY track
   `

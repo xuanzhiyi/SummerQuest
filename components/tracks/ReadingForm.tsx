@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 
 interface Props {
   date: string
-  track: 'chinese' | 'swedish' | 'french'
+  track: 'chinese' | 'swedish' | 'french' | 'english-reading' | 'finnish-reading'
   onSaved: (entry: unknown, points: number) => void
   initialText?: string
   initialLevel?: number

@@ -74,14 +74,14 @@ export default function QuestPageContent({ track, date, initialEntries, canEdit,
   }
 
   // Reading tracks: show audio player + re-record option instead of generic "already logged"
-  const isReadingTrack = track === 'chinese' || track === 'swedish' || track === 'french'
+  const isReadingTrack = track === 'chinese' || track === 'swedish' || track === 'french' || track === 'english-reading' || track === 'finnish-reading'
   if (hasEntry && isReadingTrack) {
     const latestEntry = entries[entries.length - 1]
     if (reRecording) {
       return (
         <ReadingForm
           date={date}
-          track={track as 'chinese' | 'swedish' | 'french'}
+          track={track as 'chinese' | 'swedish' | 'french' | 'english-reading' | 'finnish-reading'}
           onSaved={handleSaved}
           initialText={latestEntry.ai_generated_text as string}
           initialLevel={latestEntry.level_at_time as number}
@@ -131,9 +131,11 @@ function TrackForm({ track, date, onSaved }: { track: string; date: string; onSa
     case 'books':      return <BooksForm date={date} onSaved={onSaved} />
     case 'english':    return <WritingForm date={date} track="english" onSaved={onSaved} />
     case 'finnish':    return <WritingForm date={date} track="finnish" onSaved={onSaved} />
-    case 'chinese':    return <ReadingForm date={date} track="chinese" onSaved={onSaved} />
-    case 'swedish':    return <ReadingForm date={date} track="swedish" onSaved={onSaved} />
-    case 'french':     return <ReadingForm date={date} track="french" onSaved={onSaved} />
+    case 'chinese':          return <ReadingForm date={date} track="chinese" onSaved={onSaved} />
+    case 'swedish':          return <ReadingForm date={date} track="swedish" onSaved={onSaved} />
+    case 'french':           return <ReadingForm date={date} track="french" onSaved={onSaved} />
+    case 'english-reading':  return <ReadingForm date={date} track="english-reading" onSaved={onSaved} />
+    case 'finnish-reading':  return <ReadingForm date={date} track="finnish-reading" onSaved={onSaved} />
     case 'math':       return <ProblemSetForm date={date} track="math" onSaved={onSaved} />
     case 'science':    return <ProblemSetForm date={date} track="science" onSaved={onSaved} />
     case 'ai_project': return <AiProjectForm date={date} onSaved={onSaved} />
@@ -196,7 +198,7 @@ function EntryCard({ track, entry, showScores }: { track: string; entry: Record<
           <PointsBadge points={entry.points_awarded as number} />
         </div>
       )
-    case 'chinese': case 'swedish': case 'french':
+    case 'chinese': case 'swedish': case 'french': case 'english-reading': case 'finnish-reading':
       return (
         <div className="bg-white rounded-xl p-4 shadow-sm text-sm space-y-2">
           <div className="bg-blue-50 rounded-lg p-3 font-medium text-gray-800 whitespace-pre-wrap">

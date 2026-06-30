@@ -19,11 +19,14 @@ const TRACK_LABELS: Record<string, string> = {
   word_english_swedish: '🇸🇪 Swedish words',
   word_english_french:  '🇫🇷 French words',
   diary:                '📓 Diary',
+  english_reading:      '📖 English Reading',
+  finnish_reading:      '📖 Finnish Reading',
 }
 
 const AI_GRADED = new Set(['english', 'finnish', 'math', 'science'])
 const HAS_LEVEL = new Set([
   'english', 'finnish', 'chinese', 'swedish', 'french', 'math', 'science',
+  'english_reading', 'finnish_reading',
   'word_english_finnish', 'word_english_chinese', 'word_english_swedish', 'word_english_french',
 ])
 const HAS_DAILY_TARGET = new Set([

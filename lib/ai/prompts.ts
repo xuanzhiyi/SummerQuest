@@ -67,6 +67,28 @@ The passage should be:
 Return only the passage, nothing else.`
 }
 
+export function englishReadingPrompt(level: number): string {
+  return `Generate a short English reading passage appropriate for a 13-year-old at English level ${level}/10 (where 1=very simple sentences, 5=intermediate/B1, 10=advanced/native-level). He is a native Finnish speaker with strong English skills.
+
+The passage should be:
+- 80-150 words long (shorter for lower levels, longer for higher)
+- On an interesting, age-appropriate topic (nature, tech, sports, history, daily life, etc.)
+- Vocabulary and sentence complexity appropriate for the level
+
+Return only the passage, nothing else.`
+}
+
+export function finnishReadingPrompt(level: number): string {
+  return `Generate a short Finnish reading passage appropriate for a 13-year-old at Finnish level ${level}/10 (where 1=very simple sentences, 5=intermediate, 10=advanced/native-level). He is a native Finnish speaker.
+
+The passage should be:
+- 80-150 words long (shorter for lower levels, longer for higher)
+- On an interesting, age-appropriate topic
+- Vocabulary and sentence complexity appropriate for the level
+
+Return only the passage, nothing else.`
+}
+
 export function mathProblemsPrompt(level: number): string {
   return `Generate a small set of 3-4 math problems for a 13-year-old Finnish student at the grade 6→7 transition (topics: fractions/decimals, percentages, basic geometry, simple equations, basic statistics). Difficulty level: ${level}/10.
 
