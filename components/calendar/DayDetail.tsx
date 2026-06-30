@@ -63,6 +63,17 @@ function progressLabel(track: string, entries: Record<string, unknown[]>, dailyT
   return `${count}/${target} sets`
 }
 
+function completedTime(track: string, entries: Record<string, unknown[]>) {
+  const rows = entries[track] ?? []
+  if (rows.length === 0) return null
+  const latest = rows[rows.length - 1] as Record<string, unknown>
+  const ts = latest.created_at
+  if (!ts) return null
+  const d = new Date(ts as string)
+  if (isNaN(d.getTime())) return null
+  return d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
+}
+
 export default function DayDetail({ date, entries, canEdit, role, dailyTargets, earnedXP, xpPerTrack, name }: Props) {
   const d = new Date(date + 'T12:00:00')
   const displayDate = d.toLocaleDateString('en', { weekday: 'long', month: 'long', day: 'numeric' })
@@ -163,7 +174,7 @@ export default function DayDetail({ date, entries, canEdit, role, dailyTargets, 
             <p style={{ fontSize: 11, fontWeight: 800, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 2, marginBottom: 10 }}>
               Done / 已完成 ✓
             </p>
-            {completed.map(q => <QuestCard key={q.track} quest={q} done={true} date={date} progress={progressLabel(q.track, entries, dailyTargets)} canEdit={canEdit} xp={getXP(q.track)} />)}
+            {completed.map(q => <QuestCard key={q.track} quest={q} done={true} date={date} progress={progressLabel(q.track, entries, dailyTargets)} canEdit={canEdit} xp={getXP(q.track)} completedAt={completedTime(q.track, entries)} />)}
           </div>
         )}
       </div>
@@ -178,9 +189,10 @@ interface QuestCardProps {
   progress: string | null
   canEdit: boolean
   xp: number
+  completedAt?: string | null
 }
 
-function QuestCard({ quest, done, date, progress, canEdit, xp }: QuestCardProps) {
+function QuestCard({ quest, done, date, progress, canEdit, xp, completedAt }: QuestCardProps) {
   const cat = quest.category as Category
   const catStyle = CATEGORY_STYLE[cat]
 
@@ -227,6 +239,11 @@ function QuestCard({ quest, done, date, progress, canEdit, xp }: QuestCardProps)
             ) : (
               <span style={{ fontSize: 11, fontWeight: 800, padding: '3px 10px', borderRadius: 20, background: done ? '#D1FAE5' : '#FEF3C7', color: done ? '#065F46' : '#92400E' }}>
                 ⭐ {xp} XP
+              </span>
+            )}
+            {done && completedAt && (
+              <span style={{ fontSize: 11, fontWeight: 700, color: '#6B7280' }}>
+                🕐 {completedAt}
               </span>
             )}
           </div>

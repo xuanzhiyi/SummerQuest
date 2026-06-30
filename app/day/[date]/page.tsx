@@ -30,21 +30,23 @@ export default async function DayPage({ params }: Props) {
   }
   const canEdit = role === 'admin' || (role === 'child' && isToday(date))
 
-  const [books, english, finnish, chinese, swedish, french, math, science, aiProject, sport, piano, diary, wordPairing, wordTargets, trackSettings] =
+  const [books, english, finnish, chinese, swedish, french, englishReading, finnishReading, math, science, aiProject, sport, piano, diary, wordPairing, wordTargets, trackSettings] =
     await Promise.all([
-      sql`SELECT * FROM entries_books      WHERE user_id = ${userId} AND date = ${date}`,
-      sql`SELECT * FROM entries_english    WHERE user_id = ${userId} AND date = ${date}`,
-      sql`SELECT * FROM entries_finnish    WHERE user_id = ${userId} AND date = ${date}`,
-      sql`SELECT * FROM entries_chinese    WHERE user_id = ${userId} AND date = ${date}`,
-      sql`SELECT * FROM entries_swedish    WHERE user_id = ${userId} AND date = ${date}`,
-      sql`SELECT * FROM entries_french     WHERE user_id = ${userId} AND date = ${date}`,
-      sql`SELECT * FROM entries_math       WHERE user_id = ${userId} AND date = ${date}`,
-      sql`SELECT * FROM entries_science    WHERE user_id = ${userId} AND date = ${date}`,
-      sql`SELECT * FROM entries_ai_project WHERE user_id = ${userId} AND date = ${date}`,
-      sql`SELECT * FROM entries_sport      WHERE user_id = ${userId} AND date = ${date}`,
-      sql`SELECT * FROM entries_piano      WHERE user_id = ${userId} AND date = ${date}`,
-      sql`SELECT * FROM entries_diary      WHERE user_id = ${userId} AND date = ${date}`,
-      sql`SELECT language_pair, points_awarded FROM entries_word_pairing WHERE user_id = ${userId} AND date = ${date}`,
+      sql`SELECT * FROM entries_books            WHERE user_id = ${userId} AND date = ${date}`,
+      sql`SELECT * FROM entries_english          WHERE user_id = ${userId} AND date = ${date}`,
+      sql`SELECT * FROM entries_finnish          WHERE user_id = ${userId} AND date = ${date}`,
+      sql`SELECT * FROM entries_chinese          WHERE user_id = ${userId} AND date = ${date}`,
+      sql`SELECT * FROM entries_swedish          WHERE user_id = ${userId} AND date = ${date}`,
+      sql`SELECT * FROM entries_french           WHERE user_id = ${userId} AND date = ${date}`,
+      sql`SELECT * FROM entries_english_reading  WHERE user_id = ${userId} AND date = ${date}`,
+      sql`SELECT * FROM entries_finnish_reading  WHERE user_id = ${userId} AND date = ${date}`,
+      sql`SELECT * FROM entries_math             WHERE user_id = ${userId} AND date = ${date}`,
+      sql`SELECT * FROM entries_science          WHERE user_id = ${userId} AND date = ${date}`,
+      sql`SELECT * FROM entries_ai_project       WHERE user_id = ${userId} AND date = ${date}`,
+      sql`SELECT * FROM entries_sport            WHERE user_id = ${userId} AND date = ${date}`,
+      sql`SELECT * FROM entries_piano            WHERE user_id = ${userId} AND date = ${date}`,
+      sql`SELECT * FROM entries_diary            WHERE user_id = ${userId} AND date = ${date}`,
+      sql`SELECT language_pair, points_awarded, created_at FROM entries_word_pairing WHERE user_id = ${userId} AND date = ${date}`,
       sql`SELECT track, daily_target FROM track_settings WHERE track LIKE 'word_%'`,
       sql`SELECT track, points_per_entry FROM track_settings`,
     ])
@@ -64,6 +66,8 @@ export default async function DayPage({ params }: Props) {
     chinese: chinese as unknown[],
     swedish: swedish as unknown[],
     french: french as unknown[],
+    'english-reading': englishReading as unknown[],
+    'finnish-reading': finnishReading as unknown[],
     math: math as unknown[],
     science: science as unknown[],
     ai_project: aiProject as unknown[],
@@ -79,7 +83,8 @@ export default async function DayPage({ params }: Props) {
   }
   const earnedXP =
     sumPoints(books) + sumPoints(english) + sumPoints(finnish) + sumPoints(chinese) +
-    sumPoints(swedish) + sumPoints(french) + sumPoints(math) + sumPoints(science) +
+    sumPoints(swedish) + sumPoints(french) + sumPoints(englishReading) + sumPoints(finnishReading) +
+    sumPoints(math) + sumPoints(science) +
     sumPoints(aiProject) + sumPoints(sport) + sumPoints(piano) + sumPoints(diary) + sumPoints(wordPairing)
 
   const dailyTargets: Record<string, number> = {}
