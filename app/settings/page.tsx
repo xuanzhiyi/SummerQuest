@@ -15,7 +15,7 @@ export default async function GuardianSettingsPage() {
   const childId = session.user.childIds?.[0]
   if (!childId) redirect('/')
 
-  const [child] = await sql`SELECT id, name FROM users WHERE id = ${childId}`
+  const [child] = await sql`SELECT id, name, perfect_day_threshold FROM users WHERE id = ${childId}`
   if (!child) redirect('/')
 
   const [settings, thresholds] = await Promise.all([
@@ -42,6 +42,7 @@ export default async function GuardianSettingsPage() {
           settings={settings as unknown as Record<string, unknown>[]}
           thresholds={thresholds as unknown as Record<string, unknown>[]}
           childUserId={childId}
+          perfectDayThreshold={child.perfect_day_threshold != null ? Number(child.perfect_day_threshold) : null}
         />
       </main>
     </div>

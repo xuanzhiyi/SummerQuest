@@ -15,14 +15,16 @@ export default async function HomePage() {
     const childId = session.user.childIds?.[0]
     if (!childId) redirect('/login')
     userId = childId
-    const [child] = await sql`SELECT name FROM users WHERE id = ${childId}`
-    if (child) viewingName = String(child.name)
   }
+  const [child] = await sql`SELECT name, perfect_day_threshold FROM users WHERE id = ${userId}`
+  if (session.user.role === 'guardian' && child) viewingName = String(child.name)
+  const perfectThreshold = child?.perfect_day_threshold != null ? Number(child.perfect_day_threshold) : null
+
   const tiles = await getCalendarTiles(userId)
 
   return (
     <div className="min-h-screen max-w-lg mx-auto" style={{ background: '#FFFBF5' }}>
-      <CalendarGrid tiles={tiles} role={session.user.role} name={viewingName} />
+      <CalendarGrid tiles={tiles} role={session.user.role} name={viewingName} perfectThreshold={perfectThreshold} />
     </div>
   )
 }

@@ -58,9 +58,10 @@ interface Props {
   settings: Record<string, unknown>[]
   thresholds: Record<string, unknown>[]
   childUserId?: number
+  perfectDayThreshold?: number | null
 }
 
-export default function SettingsForm({ settings, thresholds, childUserId }: Props) {
+export default function SettingsForm({ settings, thresholds, childUserId, perfectDayThreshold }: Props) {
   const [rows, setRows] = useState<TrackSetting[]>(settings as unknown as TrackSetting[])
   const [tRows, setTRows] = useState<Threshold[]>(thresholds as unknown as Threshold[])
   const [saving, setSaving] = useState<string | null>(null)
@@ -69,6 +70,23 @@ export default function SettingsForm({ settings, thresholds, childUserId }: Prop
     track: 'sport', pts: '', desc: '',
   })
   const [addingThreshold, setAddingThreshold] = useState(false)
+  const [perfectGoal, setPerfectGoal] = useState<number>(perfectDayThreshold ?? rows.length)
+  const [savingGoal, setSavingGoal] = useState(false)
+  const [savedGoal, setSavedGoal] = useState(false)
+
+  async function savePerfectGoal(value: number) {
+    setSavingGoal(true)
+    const res = await fetch('/api/settings/perfect-day', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ child_user_id: childUserId, perfect_day_threshold: value }),
+    })
+    setSavingGoal(false)
+    if (res.ok) {
+      setSavedGoal(true)
+      setTimeout(() => setSavedGoal(false), 1500)
+    }
+  }
 
   async function saveSetting(track: string, field: string, value: number) {
     setSaving(track + field)
@@ -125,6 +143,31 @@ export default function SettingsForm({ settings, thresholds, childUserId }: Prop
 
   return (
     <div className="space-y-8">
+      {/* Perfect day goal */}
+      <section>
+        <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-3">
+          Perfect day goal
+        </h3>
+        <div className="bg-white rounded-xl shadow-sm p-4">
+          <p className="text-sm text-gray-600 mb-3">
+            How many quests finished in one day counts as a &quot;perfect day&quot;? ({rows.length} quests available)
+          </p>
+          <div className="flex items-center gap-2">
+            <input
+              type="number"
+              value={perfectGoal}
+              min={1} max={rows.length}
+              onChange={(e) => setPerfectGoal(parseInt(e.target.value) || 1)}
+              onBlur={(e) => savePerfectGoal(parseInt(e.target.value) || 1)}
+              className="w-24 border border-gray-200 rounded-lg px-2 py-1.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-amber-300"
+            />
+            <span className="text-sm text-gray-500">quests</span>
+            {savingGoal && <span className="text-xs text-amber-400">…</span>}
+            {savedGoal && <span className="text-xs text-green-500">✓</span>}
+          </div>
+        </div>
+      </section>
+
       {/* Track settings */}
       <section>
         <h3 className="text-sm font-semibold text-gray-600 uppercase tracking-wide mb-3">

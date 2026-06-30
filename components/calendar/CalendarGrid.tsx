@@ -8,6 +8,7 @@ interface Props {
   tiles: DayTile[]
   role: string
   name: string
+  perfectThreshold?: number | null
 }
 
 const DAY_HEADERS = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
@@ -23,7 +24,9 @@ function getDowIndex(date: string) {
   return d === 0 ? 6 : d - 1 // Mon=0 … Sun=6
 }
 
-export default function CalendarGrid({ tiles, role, name }: Props) {
+export default function CalendarGrid({ tiles, role, name, perfectThreshold }: Props) {
+  const perfectGoal = perfectThreshold ?? TOTAL_QUESTS
+
   // Determine available months from tiles
   const months = [...new Set(tiles.map(t => t.date.slice(0, 7)))].sort()
   const initialMonth = months.find(m => m === TODAY.slice(0, 7)) ?? months[0] ?? TODAY.slice(0, 7)
@@ -37,7 +40,7 @@ export default function CalendarGrid({ tiles, role, name }: Props) {
 
   // Stats across all time (not just this month)
   const pastTiles = tiles.filter(t => !isFuture(t.date))
-  const perfectDays = pastTiles.filter(t => t.completed_quests >= TOTAL_QUESTS).length
+  const perfectDays = pastTiles.filter(t => t.completed_quests >= perfectGoal).length
   const totalXP = pastTiles.reduce((s, t) => s + t.total_points, 0)
   const totalQuestsDone = pastTiles.reduce((s, t) => s + t.completed_quests, 0)
 
@@ -125,7 +128,7 @@ export default function CalendarGrid({ tiles, role, name }: Props) {
             <div key={wi} style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 5 }}>
               {wk.map((tile, ci) =>
                 tile
-                  ? <DayCell key={tile.date} tile={tile} />
+                  ? <DayCell key={tile.date} tile={tile} perfectGoal={perfectGoal} />
                   : <div key={`e-${wi}-${ci}`} />
               )}
             </div>
@@ -144,12 +147,12 @@ export default function CalendarGrid({ tiles, role, name }: Props) {
   )
 }
 
-function DayCell({ tile }: { tile: DayTile }) {
+function DayCell({ tile, perfectGoal }: { tile: DayTile; perfectGoal: number }) {
   const today = isToday(tile.date)
   const future = isFuture(tile.date)
   const dayNum = parseInt(tile.date.slice(8, 10))
   const done = tile.completed_quests
-  const allDone = done >= TOTAL_QUESTS
+  const allDone = done >= perfectGoal
   const partial = done > 0 && !allDone
 
   let bg = '#F3F4F6'
