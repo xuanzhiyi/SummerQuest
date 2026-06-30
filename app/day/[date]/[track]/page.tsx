@@ -1,6 +1,6 @@
 import { redirect, notFound } from 'next/navigation'
 import { auth } from '@/lib/auth'
-import { isToday, PROGRAM_START, PROGRAM_END } from '@/lib/calendar'
+import { isToday, PROGRAM_START, PROGRAM_END, todayDate } from '@/lib/calendar'
 import sql from '@/lib/db'
 import Link from 'next/link'
 import NavBar from '@/components/ui/NavBar'
@@ -41,7 +41,7 @@ export default async function QuestPage({ params }: Props) {
   if (!TRACK_INFO[track]) notFound()
 
   const role = session.user.role
-  if (role === 'child' && date > new Date().toISOString().slice(0, 10)) redirect('/')
+  if (role === 'child' && date > todayDate()) redirect('/')
 
   const canEdit = role === 'admin' || (role === 'child' && isToday(date))
 

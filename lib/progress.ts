@@ -1,4 +1,5 @@
 import sql from './db'
+import { todayDate } from './calendar'
 import type { Track } from '@/types'
 
 export interface TrackProgress {
@@ -30,12 +31,14 @@ async function getStreak(userId: number, track: Track): Promise<number> {
   )
   if (rows.length === 0) return 0
 
-  const today = new Date().toISOString().slice(0, 10)
-  const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10)
+  const today = todayDate()
+  const yesterday = new Date(today + 'T12:00:00')
+  yesterday.setDate(yesterday.getDate() - 1)
+  const yesterdayStr = yesterday.toISOString().slice(0, 10)
   const mostRecent = rows[0].date
 
   // Streak only active if most recent entry was today or yesterday
-  if (mostRecent !== today && mostRecent !== yesterday) return 0
+  if (mostRecent !== today && mostRecent !== yesterdayStr) return 0
 
   let streak = 0
   let expected = mostRecent

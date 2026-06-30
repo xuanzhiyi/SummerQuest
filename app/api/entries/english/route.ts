@@ -1,6 +1,7 @@
 ﻿import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import sql from '@/lib/db'
+import { todayDate } from '@/lib/calendar'
 import { generateText } from '@/lib/ai/client'
 import { englishFeedbackPrompt, extractScore } from '@/lib/ai/prompts'
 
@@ -15,7 +16,7 @@ export async function POST(req: NextRequest) {
 
   const userId = parseInt(session.user.id)
 
-  if (session.user.role === 'child' && date !== new Date().toISOString().slice(0, 10)) {
+  if (session.user.role === 'child' && date !== todayDate()) {
     return NextResponse.json({ error: 'Can only log today' }, { status: 403 })
   }
 

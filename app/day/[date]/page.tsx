@@ -1,6 +1,6 @@
 import { redirect, notFound } from 'next/navigation'
 import { auth } from '@/lib/auth'
-import { isToday, isPast, PROGRAM_START, PROGRAM_END } from '@/lib/calendar'
+import { isToday, isPast, PROGRAM_START, PROGRAM_END, todayDate } from '@/lib/calendar'
 import sql from '@/lib/db'
 import DayDetail from '@/components/calendar/DayDetail'
 
@@ -17,7 +17,7 @@ export default async function DayPage({ params }: Props) {
   if (date < PROGRAM_START || date > PROGRAM_END) notFound()
 
   const role = session.user.role
-  if (role === 'child' && date > new Date().toISOString().slice(0, 10)) {
+  if (role === 'child' && date > todayDate()) {
     redirect('/')
   }
 

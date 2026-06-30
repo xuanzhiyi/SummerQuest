@@ -13,7 +13,7 @@ interface Props {
 const DAY_HEADERS = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
 const WEEKEND_IDX = new Set([5, 6])
 
-const TODAY = new Date().toISOString().slice(0, 10)
+const TODAY = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Helsinki' }).format(new Date())
 
 function isFuture(date: string) { return date > TODAY }
 function isToday(date: string)  { return date === TODAY }

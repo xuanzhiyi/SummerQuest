@@ -15,12 +15,17 @@ export function programDates(): string[] {
   return dates
 }
 
+// Local "today" in Europe/Helsinki — avoids UTC date drift near midnight for CEST/EEST users
+export function todayDate(): string {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Helsinki' }).format(new Date())
+}
+
 export function isToday(date: string): boolean {
-  return date === new Date().toISOString().slice(0, 10)
+  return date === todayDate()
 }
 
 export function isPast(date: string): boolean {
-  return date < new Date().toISOString().slice(0, 10)
+  return date < todayDate()
 }
 
 // Load daily point totals and effort signals for all program days
