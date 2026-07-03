@@ -212,6 +212,27 @@ function EntryCard({ track, entry, showScores }: { track: string; entry: Record<
           <PointsBadge points={entry.points_awarded as number} />
         </div>
       )
+    case 'english': case 'finnish':
+      return (
+        <div className="bg-white rounded-xl p-4 shadow-sm text-sm space-y-2">
+          {!!entry.prompt_used && (
+            <div className="bg-amber-50 rounded-lg px-3 py-2 text-xs text-gray-600 italic">
+              {String(entry.prompt_used)}
+            </div>
+          )}
+          <p className="text-gray-800 whitespace-pre-wrap leading-relaxed">{String(entry.paragraph)}</p>
+          {!!entry.ai_feedback && (
+            <div className="bg-green-50 rounded-lg p-3">
+              <p className="text-xs font-semibold text-green-700 mb-1">Feedback ✨</p>
+              <p className="text-gray-700 whitespace-pre-wrap">{String(entry.ai_feedback)}</p>
+              {showScores && entry.ai_score != null && (
+                <p className="text-xs text-gray-400 mt-2">Score: {String(entry.ai_score)}/100</p>
+              )}
+            </div>
+          )}
+          <PointsBadge points={entry.points_awarded as number} />
+        </div>
+      )
     case 'diary':
       return (
         <div className="bg-white rounded-xl p-4 shadow-sm text-sm space-y-2">
