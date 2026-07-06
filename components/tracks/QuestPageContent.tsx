@@ -21,9 +21,10 @@ interface Props {
   initialEntries: Record<string, unknown>[]
   canEdit: boolean
   showScores: boolean
+  level?: number
 }
 
-export default function QuestPageContent({ track, date, initialEntries, canEdit, showScores }: Props) {
+export default function QuestPageContent({ track, date, initialEntries, canEdit, showScores, level = 5 }: Props) {
   const [entries, setEntries] = useState(initialEntries)
   const [lastResult, setLastResult] = useState<{ score: number; points: number } | null>(null)
   const [reRecording, setReRecording] = useState(false)
@@ -65,7 +66,7 @@ export default function QuestPageContent({ track, date, initialEntries, canEdit,
 
         <WordPairingGame
           key={entries.length} // remount on each save to reset state
-          initialWords={getRandomWords(languagePair, 5)}
+          initialWords={getRandomWords(languagePair, 5, level)}
           languagePair={languagePair}
           date={date}
           onSaved={handleWordPairingSaved}

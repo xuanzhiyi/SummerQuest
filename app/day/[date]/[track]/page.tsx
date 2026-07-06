@@ -53,6 +53,13 @@ export default async function QuestPage({ params }: Props) {
     userId = childId
   }
 
+  // Load level for word pairing tracks
+  let trackLevel = 5
+  if (track.startsWith('word_')) {
+    const [ts] = await sql`SELECT current_level FROM track_settings WHERE track = ${track} AND child_user_id = ${userId}`
+    if (ts?.current_level) trackLevel = ts.current_level
+  }
+
   // Load existing entries for this track/date
   let entries: unknown[] = []
   if (track.startsWith('word_')) {
@@ -124,6 +131,7 @@ export default async function QuestPage({ params }: Props) {
           initialEntries={entries as Record<string, unknown>[]}
           canEdit={canEdit}
           showScores={role === 'admin'}
+          level={trackLevel}
         />
       </main>
     </div>
