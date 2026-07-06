@@ -69,6 +69,7 @@ export default async function QuestPage({ params }: Props) {
       chinese: 'entries_chinese', swedish: 'entries_swedish', french: 'entries_french',
       'english-reading': 'entries_english_reading', 'finnish-reading': 'entries_finnish_reading',
       science: 'entries_science', ai_project: 'entries_ai_project', diary: 'entries_diary',
+      piano: 'entries_piano',
     }
     const table = tableMap[track]
     if (table) {

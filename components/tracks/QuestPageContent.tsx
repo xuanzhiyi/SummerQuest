@@ -104,7 +104,7 @@ export default function QuestPageContent({ track, date, initialEntries, canEdit,
   // Piano: pass saved entry so PianoForm can show playback + re-record
   if (hasEntry && track === 'piano') {
     const latestEntry = entries[entries.length - 1]
-    return <PianoForm date={date} onSaved={handleSaved} savedEntry={latestEntry} />
+    return <PianoForm date={date} onSaved={handleSaved} savedEntry={latestEntry} canEdit={canEdit} />
   }
 
   // Regular tracks

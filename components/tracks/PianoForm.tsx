@@ -12,6 +12,7 @@ interface Props {
   onSaved: (entry: unknown, points: number) => void
   // When re-opening a saved entry
   savedEntry?: Record<string, unknown> | null
+  canEdit?: boolean
 }
 
 type Stage = 'form' | 'recording' | 'uploading' | 'done'
@@ -28,7 +29,7 @@ function formatSize(bytes: number) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
-export default function PianoForm({ date, onSaved, savedEntry }: Props) {
+export default function PianoForm({ date, onSaved, savedEntry, canEdit = true }: Props) {
   const [piece, setPiece] = useState((savedEntry?.piece as string) ?? '')
   const [duration, setDuration] = useState(savedEntry ? String(savedEntry.duration_minutes) : '')
   const [formError, setFormError] = useState('')
@@ -353,20 +354,24 @@ export default function PianoForm({ date, onSaved, savedEntry }: Props) {
       )}
 
       {/* Actions */}
-      <button
-        onClick={() => setStage('recording')}
-        style={{ width: '100%', background: '#F59E0B', color: '#fff', borderRadius: 18, padding: '16px', border: 'none', fontFamily: "'Nunito', sans-serif", fontSize: 15, fontWeight: 800, cursor: 'pointer' }}
-      >
-        🎙️ {audioUrl ? 'Record another clip' : 'Add a recording'}
-      </button>
+      {canEdit && (
+        <>
+          <button
+            onClick={() => setStage('recording')}
+            style={{ width: '100%', background: '#F59E0B', color: '#fff', borderRadius: 18, padding: '16px', border: 'none', fontFamily: "'Nunito', sans-serif", fontSize: 15, fontWeight: 800, cursor: 'pointer' }}
+          >
+            🎙️ {audioUrl ? 'Record another clip' : 'Add a recording'}
+          </button>
 
-      {audioUrl && (
-        <button
-          onClick={deleteAndReRecord}
-          style={{ width: '100%', background: '#FEF2F2', color: '#DC2626', border: '2px solid #FECACA', borderRadius: 18, padding: '16px', fontFamily: "'Nunito', sans-serif", fontSize: 15, fontWeight: 800, cursor: 'pointer' }}
-        >
-          🗑️ Delete and record again
-        </button>
+          {audioUrl && (
+            <button
+              onClick={deleteAndReRecord}
+              style={{ width: '100%', background: '#FEF2F2', color: '#DC2626', border: '2px solid #FECACA', borderRadius: 18, padding: '16px', fontFamily: "'Nunito', sans-serif", fontSize: 15, fontWeight: 800, cursor: 'pointer' }}
+            >
+              🗑️ Delete and record again
+            </button>
+          )}
+        </>
       )}
     </div>
   )
