@@ -241,6 +241,17 @@ function EntryCard({ track, entry, showScores }: { track: string; entry: Record<
           <PointsBadge points={entry.points_awarded as number} />
         </div>
       )
+    case 'ai_project':
+      return (
+        <div className="bg-white rounded-xl p-4 shadow-sm text-sm space-y-2">
+          {!!entry.image_url && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={String(entry.image_url)} alt="AI project screenshot" className="w-full rounded-lg" />
+          )}
+          <p className="text-gray-800 whitespace-pre-wrap leading-relaxed">{String(entry.caption)}</p>
+          <PointsBadge points={entry.points_awarded as number} />
+        </div>
+      )
     case 'math': case 'science':
       return (
         <div className="bg-white rounded-xl p-4 shadow-sm text-sm space-y-2">
