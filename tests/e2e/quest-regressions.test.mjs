@@ -115,6 +115,25 @@ test('AI-generating quest routes use the configured model', async () => {
   }
 })
 
+test('quest metadata is centralized for key UI and reward paths', async () => {
+  const registry = await source('lib/tracks.ts')
+  const dayDetail = await source('components/calendar/DayDetail.tsx')
+  const settingsForm = await source('components/admin/SettingsForm.tsx')
+  const rewardsQueue = await source('components/admin/RewardsQueue.tsx')
+  const rewardRequest = await source('app/api/rewards/request/route.ts')
+
+  assert.match(registry, /export const QUEST_DEFINITIONS/)
+  assert.match(registry, /getEntryTableForSettingsTrack/)
+  assert.match(dayDetail, /QUEST_DEFINITIONS/)
+  assert.doesNotMatch(dayDetail, /const ALL_QUESTS = \[/)
+  assert.match(settingsForm, /getQuestBySettingsTrack/)
+  assert.doesNotMatch(settingsForm, /const HAS_LEVEL = new Set/)
+  assert.match(rewardsQueue, /TRACK_LABELS/)
+  assert.doesNotMatch(rewardsQueue, /const TRACK_LABELS/)
+  assert.match(rewardRequest, /getEntryTableForSettingsTrack\(track\)/)
+  assert.doesNotMatch(rewardRequest, /const tableByTrack/)
+})
+
 let failures = 0
 for (const { name, fn } of tests) {
   try {

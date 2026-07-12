@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import sql from '@/lib/db'
+import { getEntryTableForSettingsTrack } from '@/lib/tracks'
 
 async function getAwardedPoints(userId: number, track: string): Promise<number> {
   if (track.startsWith('word_')) {
@@ -13,24 +14,7 @@ async function getAwardedPoints(userId: number, track: string): Promise<number> 
     return Number(row.total)
   }
 
-  const tableByTrack: Record<string, string> = {
-    sport: 'entries_sport',
-    math: 'entries_math',
-    books: 'entries_books',
-    english: 'entries_english',
-    finnish: 'entries_finnish',
-    chinese: 'entries_chinese',
-    swedish: 'entries_swedish',
-    french: 'entries_french',
-    science: 'entries_science',
-    ai_project: 'entries_ai_project',
-    piano: 'entries_piano',
-    diary: 'entries_diary',
-    english_reading: 'entries_english_reading',
-    finnish_reading: 'entries_finnish_reading',
-  }
-
-  const table = tableByTrack[track]
+  const table = getEntryTableForSettingsTrack(track)
   if (!table) return 0
 
   const [row] = await sql.unsafe(

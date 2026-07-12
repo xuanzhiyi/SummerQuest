@@ -10,7 +10,9 @@
     "db:schema": "psql $DATABASE_URL -f db/schema.sql",
     "db:seed": "npx tsx db/seed.ts",
     "typecheck": "tsc --noEmit",
-    "test:e2e": "node --no-warnings tests/e2e/quest-regressions.test.mjs"
+    "test:unit": "node --no-warnings tests/unit/quest-unit-tests.mjs",
+    "test:e2e": "node --no-warnings tests/e2e/quest-regressions.test.mjs",
+    "test": "npm.cmd run test:unit && npm.cmd run test:e2e"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1075.0",

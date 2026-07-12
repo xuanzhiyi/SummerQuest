@@ -2,24 +2,7 @@
 
 import { useState } from 'react'
 import type { TrackProgress } from '@/lib/progress'
-
-const TRACK_LABELS: Record<string, string> = {
-  sport: 'Sport',
-  math: 'Math',
-  books: 'Books',
-  english: 'English',
-  finnish: 'Finnish',
-  chinese: 'Chinese',
-  swedish: 'Swedish',
-  french: 'French',
-  science: 'Science',
-  ai_project: 'AI Project',
-  piano: 'Piano',
-  word_english_finnish: 'Finnish words',
-  word_english_chinese: 'Chinese words',
-  word_english_swedish: 'Swedish words',
-  word_english_french: 'French words',
-}
+import { TRACK_LABELS } from '@/lib/tracks'
 
 interface Props {
   progress: TrackProgress[]
