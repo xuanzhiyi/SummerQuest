@@ -10,8 +10,8 @@ function getGemini(): GoogleGenerativeAI {
   return _gemini
 }
 
-export async function generateText(prompt: string): Promise<string> {
-  const model = getGemini().getGenerativeModel({ model: 'gemini-3.1-flash-lite-preview' })
+export async function generateText(prompt: string, modelName = 'gemini-3.1-flash-lite-preview'): Promise<string> {
+  const model = getGemini().getGenerativeModel({ model: modelName })
   const result = await model.generateContent(prompt)
   return result.response.text()
 }

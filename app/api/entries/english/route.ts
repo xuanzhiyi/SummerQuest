@@ -20,11 +20,23 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Can only log today' }, { status: 403 })
   }
 
-  const [settings] = await sql`
-    SELECT points_per_entry, current_level FROM track_settings WHERE track = 'english' AND child_user_id = ${userId}
-  `
-  const points = settings?.points_per_entry ?? 10
-  const level = settings?.current_level ?? 5
+  const [settings, aiModelSetting] = await Promise.all([
+    sql`SELECT points_per_entry, current_level FROM track_settings WHERE track = 'english' AND child_user_id = ${userId}`,
+    sql`SELECT value FROM system_settings WHERE key = 'ai_model'`,
+  ])
+  const [trackSettings] = settings
+  const [aiModelRow] = aiModelSetting
+  const points = trackSettings?.points_per_entry ?? 10
+  const level = trackSettings?.current_level ?? 5
+  const aiModel = String(aiModelRow?.value ?? 'gemini-3.1-flash-lite-preview')
+
+  const previousEntries = [...await sql`
+    SELECT date::text AS date, prompt_used, paragraph, ai_score
+    FROM entries_english
+    WHERE user_id = ${userId} AND date < ${date}
+    ORDER BY date DESC, created_at DESC
+    LIMIT 3
+  `].reverse() as { date: string; prompt_used: string | null; paragraph: string; ai_score: string | number | null }[]
 
   // Save entry immediately
   const [entry] = await sql`
@@ -37,7 +49,7 @@ export async function POST(req: NextRequest) {
   let ai_feedback: string | null = null
   let ai_score: number | null = null
   try {
-    const raw = await generateText(englishFeedbackPrompt(paragraph, prompt_used ?? '', level))
+    const raw = await generateText(englishFeedbackPrompt(paragraph, prompt_used ?? '', level, previousEntries), aiModel)
     const parsed = extractScore(raw)
     ai_feedback = parsed.feedback
     ai_score = parsed.score

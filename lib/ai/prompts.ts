@@ -9,28 +9,59 @@ export function bookFollowUpPrompt(title: string, notes: string): string {
 Generate ONE short, friendly follow-up question about the book or his notes. The question should be genuinely curious and encourage him to think or share more — not a quiz question. Keep it to 1-2 sentences. Return only the question, nothing else.`
 }
 
-export function englishFeedbackPrompt(paragraph: string, prompt: string, level: number): string {
+export interface PreviousWritingEntry {
+  date: string
+  prompt_used: string | null
+  paragraph: string
+  ai_score?: number | string | null
+}
+
+function previousWritingContext(previousEntries: PreviousWritingEntry[]): string {
+  if (previousEntries.length === 0) {
+    return 'No previous writing entries are available for comparison.'
+  }
+
+  return previousEntries.map((entry, index) => {
+    const score = entry.ai_score != null ? `\nPrevious score: ${entry.ai_score}/100` : ''
+    return `Previous writing ${index + 1} (${entry.date}):
+Prompt: "${entry.prompt_used ?? 'No prompt saved'}"
+Paragraph:
+"${entry.paragraph}"${score}`
+  }).join('\n\n')
+}
+
+export function englishFeedbackPrompt(paragraph: string, prompt: string, level: number, previousEntries: PreviousWritingEntry[] = []): string {
   return `You are a warm, encouraging English teacher reviewing a paragraph written by a 13-year-old Finnish boy. His English level is ${level}/10 (where 1=beginner, 10=advanced for his age).
 
 Writing prompt he was given: "${prompt}"
+
+Here are up to three previous English writing entries from the same learner, oldest to newest:
+${previousWritingContext(previousEntries)}
 
 His paragraph:
 "${paragraph}"
 
 Give warm, age-appropriate written feedback covering grammar, vocabulary, and structure/coherence. Be encouraging — this is summer learning, not a school exam. Point out 1-2 things done well and 1-2 specific things to improve. Keep feedback to 3-5 sentences.
 
+If previous entries are available, include one concrete sentence about progress or a repeated pattern compared with the previous writing.
+
 Then on a new line output SCORE: followed by a number from 0 to 100 reflecting the overall quality for his level (100 = excellent for level ${level}/10). Output only the feedback and the SCORE line, nothing else.`
 }
 
-export function finnishFeedbackPrompt(paragraph: string, prompt: string, level: number): string {
+export function finnishFeedbackPrompt(paragraph: string, prompt: string, level: number, previousEntries: PreviousWritingEntry[] = []): string {
   return `You are a warm, encouraging Finnish teacher reviewing a paragraph written by a 13-year-old boy who grew up in Helsinki. His Finnish level is ${level}/10 (where 1=beginner, 10=advanced for his age).
 
 Writing prompt he was given: "${prompt}"
+
+Here are up to three previous Finnish writing entries from the same learner, oldest to newest:
+${previousWritingContext(previousEntries)}
 
 His paragraph:
 "${paragraph}"
 
 Give warm, age-appropriate written feedback in Finnish covering grammar, vocabulary, and structure/coherence. Be encouraging — this is summer learning, not a school exam. Point out 1-2 things done well and 1-2 specific things to improve. Keep feedback to 3-5 sentences.
+
+If previous entries are available, include one concrete sentence in Finnish about progress or a repeated pattern compared with the previous writing.
 
 Then on a new line output SCORE: followed by a number from 0 to 100 reflecting the overall quality for his level. Output only the feedback and the SCORE line, nothing else.`
 }
