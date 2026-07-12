@@ -4,6 +4,7 @@ import sql from '@/lib/db'
 import { todayDate } from '@/lib/calendar'
 import { generateText } from '@/lib/ai/client'
 import { scienceProblemsPrompt, scienceFeedbackPrompt, extractScore } from '@/lib/ai/prompts'
+import { getConfiguredAiModel } from '@/lib/ai/settings'
 
 export async function GET() {
   const session = await auth()
@@ -14,9 +15,10 @@ export async function GET() {
   const userId = parseInt(session.user.id)
   const [settings] = await sql`SELECT current_level FROM track_settings WHERE track = 'science' AND child_user_id = ${userId}`
   const level = settings?.current_level ?? 5
+  const aiModel = await getConfiguredAiModel()
 
   try {
-    const problems = await generateText(scienceProblemsPrompt(level))
+    const problems = await generateText(scienceProblemsPrompt(level), aiModel)
     return NextResponse.json({ problems, level })
   } catch (e) {
     console.error('AI problem generation failed:', e)
@@ -46,6 +48,7 @@ export async function POST(req: NextRequest) {
   `
   const points = settings?.points_per_entry ?? 10
   const level = settings?.current_level ?? 5
+  const aiModel = await getConfiguredAiModel()
 
   const [entry] = await sql`
     INSERT INTO entries_science (user_id, date, ai_problems, child_answers, points_awarded)
@@ -56,7 +59,7 @@ export async function POST(req: NextRequest) {
   let ai_feedback: string | null = null
   let ai_score: number | null = null
   try {
-    const raw = await generateText(scienceFeedbackPrompt(ai_problems, child_answers, level))
+    const raw = await generateText(scienceFeedbackPrompt(ai_problems, child_answers, level), aiModel)
     const parsed = extractScore(raw)
     ai_feedback = parsed.feedback
     ai_score = parsed.score

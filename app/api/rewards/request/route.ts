@@ -2,6 +2,44 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import sql from '@/lib/db'
 
+async function getAwardedPoints(userId: number, track: string): Promise<number> {
+  if (track.startsWith('word_')) {
+    const languagePair = track.replace('word_', '')
+    const [row] = await sql`
+      SELECT COALESCE(SUM(points_awarded), 0) AS total
+      FROM entries_word_pairing
+      WHERE user_id = ${userId} AND language_pair = ${languagePair}
+    `
+    return Number(row.total)
+  }
+
+  const tableByTrack: Record<string, string> = {
+    sport: 'entries_sport',
+    math: 'entries_math',
+    books: 'entries_books',
+    english: 'entries_english',
+    finnish: 'entries_finnish',
+    chinese: 'entries_chinese',
+    swedish: 'entries_swedish',
+    french: 'entries_french',
+    science: 'entries_science',
+    ai_project: 'entries_ai_project',
+    piano: 'entries_piano',
+    diary: 'entries_diary',
+    english_reading: 'entries_english_reading',
+    finnish_reading: 'entries_finnish_reading',
+  }
+
+  const table = tableByTrack[track]
+  if (!table) return 0
+
+  const [row] = await sql.unsafe(
+    `SELECT COALESCE(SUM(points_awarded), 0) AS total FROM ${table} WHERE user_id = $1`,
+    [userId]
+  )
+  return Number(row.total)
+}
+
 export async function POST(req: NextRequest) {
   const session = await auth()
   if (!session || session.user.role !== 'child') {
@@ -19,15 +57,8 @@ export async function POST(req: NextRequest) {
   if (threshold.requested_at) return NextResponse.json({ error: 'Already requested' }, { status: 409 })
   if (threshold.fulfilled_at) return NextResponse.json({ error: 'Already fulfilled' }, { status: 409 })
 
-  // Verify points
   const track = threshold.track as string
-  const table = `entries_${track}`
-  const [row] = await sql.unsafe(
-    `SELECT COUNT(*) AS cnt FROM ${table} WHERE user_id = $1`,
-    [userId]
-  )
-  const [settings] = await sql`SELECT points_per_entry FROM track_settings WHERE track = ${track}`
-  const total = Number(row.cnt) * Number(settings?.points_per_entry ?? 10)
+  const total = await getAwardedPoints(userId, track)
 
   if (total < threshold.points_required) {
     return NextResponse.json({ error: 'Points threshold not reached' }, { status: 403 })

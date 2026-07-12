@@ -4,6 +4,7 @@ import sql from '@/lib/db'
 import { todayDate } from '@/lib/calendar'
 import { generateText } from '@/lib/ai/client'
 import { bookFollowUpPrompt } from '@/lib/ai/prompts'
+import { getConfiguredAiModel } from '@/lib/ai/settings'
 
 export async function POST(req: NextRequest) {
   const session = await auth()
@@ -35,7 +36,7 @@ export async function POST(req: NextRequest) {
   // Generate follow-up question (non-blocking â€” failure doesn't break the save)
   let ai_question: string | null = null
   try {
-    ai_question = await generateText(bookFollowUpPrompt(title, notes))
+    ai_question = await generateText(bookFollowUpPrompt(title, notes), await getConfiguredAiModel())
     await sql`UPDATE entries_books SET ai_question = ${ai_question} WHERE id = ${entry.id}`
   } catch (e) {
     console.error('AI follow-up generation failed:', e)

@@ -9,8 +9,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const { date, language_pair, words_shown, results, score } = await req.json()
-  if (!date || !language_pair || !words_shown || score == null) {
+  const { date, language_pair, words_shown, results } = await req.json()
+  if (!date || !language_pair || !Array.isArray(words_shown) || !Array.isArray(results)) {
     return NextResponse.json({ error: 'Missing fields' }, { status: 400 })
   }
 
@@ -23,6 +23,21 @@ export async function POST(req: NextRequest) {
   const trackName = `word_${language_pair}`
   const [settings] = await sql`SELECT points_per_entry, daily_point_cap FROM track_settings WHERE track = ${trackName} AND child_user_id = ${userId}`
   const basePoints = settings?.points_per_entry ?? 10
+  const shownIds = new Set(words_shown.map((word: Record<string, unknown>) => String(word.wordId)))
+  const normalizedResults = results
+    .filter((result: Record<string, unknown>) => shownIds.has(String(result.wordId)) && shownIds.has(String(result.selectedWordId)))
+    .map((result: Record<string, unknown>) => {
+      const wordId = String(result.wordId)
+      const selectedWordId = String(result.selectedWordId)
+      return { wordId, selectedWordId, correct: wordId === selectedWordId }
+    })
+
+  if (normalizedResults.length !== words_shown.length) {
+    return NextResponse.json({ error: 'Invalid results' }, { status: 400 })
+  }
+
+  const correctCount = normalizedResults.filter((result) => result.correct).length
+  const score = Math.round((correctCount / words_shown.length) * 100)
   const earnedRaw = score === 100 ? basePoints : 0
 
   // Enforce daily point cap if set
@@ -40,11 +55,11 @@ export async function POST(req: NextRequest) {
 
   const [entry] = await sql`
     INSERT INTO entries_word_pairing (user_id, date, language_pair, words_shown, results, score, points_awarded)
-    VALUES (${userId}, ${date}, ${language_pair}, ${JSON.stringify(words_shown)}, ${JSON.stringify(results)}, ${score}, ${points})
+    VALUES (${userId}, ${date}, ${language_pair}, ${JSON.stringify(words_shown)}, ${JSON.stringify(normalizedResults)}, ${score}, ${points})
     RETURNING *
   `
 
-  return NextResponse.json({ entry, points_awarded: points })
+  return NextResponse.json({ entry, points_awarded: points, score })
 }
 
 export async function GET(req: NextRequest) {

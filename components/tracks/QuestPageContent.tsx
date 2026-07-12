@@ -69,6 +69,7 @@ export default function QuestPageContent({ track, date, initialEntries, canEdit,
           initialWords={getRandomWords(languagePair, 5, level)}
           languagePair={languagePair}
           date={date}
+          level={level}
           onSaved={handleWordPairingSaved}
         />
       </div>

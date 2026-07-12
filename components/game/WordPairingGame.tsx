@@ -12,6 +12,7 @@ interface Props {
   initialWords: WordPair[]
   languagePair: LanguagePair
   date: string
+  level?: number
   onSaved: (score: number, points: number) => void
 }
 
@@ -24,7 +25,7 @@ function shuffle<T>(arr: T[]): T[] {
   return a
 }
 
-export default function WordPairingGame({ initialWords, languagePair, date, onSaved }: Props) {
+export default function WordPairingGame({ initialWords, languagePair, date, level = 5, onSaved }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
   const leftRefs = useRef<Map<string, HTMLDivElement>>(new Map())
   const rightRefs = useRef<Map<string, HTMLDivElement>>(new Map())
@@ -109,20 +110,19 @@ export default function WordPairingGame({ initialWords, languagePair, date, onSa
           date,
           language_pair: languagePair,
           words_shown: words,
-          results: connections.map((c) => ({ wordId: c.leftId, correct: c.leftId === c.rightId })),
-          score,
+          results: connections.map((c) => ({ wordId: c.leftId, selectedWordId: c.rightId })),
         }),
       })
       const data = await res.json()
       setSubmitting(false)
-      onSaved(score, data.points_awarded ?? 0)
+      onSaved(data.score ?? score, data.points_awarded ?? 0)
     } catch {
       setSubmitting(false)
     }
   }
 
   function handleNextRound() {
-    const newWords = getRandomWords(languagePair, 5)
+    const newWords = getRandomWords(languagePair, 5, level)
     leftRefs.current.clear()
     rightRefs.current.clear()
     setWords(newWords)

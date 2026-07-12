@@ -1,4 +1,5 @@
 import { GoogleGenerativeAI } from '@google/generative-ai'
+import { DEFAULT_AI_MODEL } from './settings'
 
 let _gemini: GoogleGenerativeAI | null = null
 
@@ -10,7 +11,7 @@ function getGemini(): GoogleGenerativeAI {
   return _gemini
 }
 
-export async function generateText(prompt: string, modelName = 'gemini-3.1-flash-lite-preview'): Promise<string> {
+export async function generateText(prompt: string, modelName = DEFAULT_AI_MODEL): Promise<string> {
   const model = getGemini().getGenerativeModel({ model: modelName })
   const result = await model.generateContent(prompt)
   return result.response.text()

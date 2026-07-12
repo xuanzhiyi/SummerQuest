@@ -4,6 +4,7 @@ import sql from '@/lib/db'
 import { todayDate } from '@/lib/calendar'
 import { generateText } from '@/lib/ai/client'
 import { englishFeedbackPrompt, extractScore } from '@/lib/ai/prompts'
+import { getConfiguredAiModel } from '@/lib/ai/settings'
 
 export async function POST(req: NextRequest) {
   const session = await auth()
@@ -20,15 +21,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Can only log today' }, { status: 403 })
   }
 
-  const [settings, aiModelSetting] = await Promise.all([
+  const [settings, aiModel] = await Promise.all([
     sql`SELECT points_per_entry, current_level FROM track_settings WHERE track = 'english' AND child_user_id = ${userId}`,
-    sql`SELECT value FROM system_settings WHERE key = 'ai_model'`,
+    getConfiguredAiModel(),
   ])
   const [trackSettings] = settings
-  const [aiModelRow] = aiModelSetting
   const points = trackSettings?.points_per_entry ?? 10
   const level = trackSettings?.current_level ?? 5
-  const aiModel = String(aiModelRow?.value ?? 'gemini-3.1-flash-lite-preview')
 
   const previousEntries = [...await sql`
     SELECT date::text AS date, prompt_used, paragraph, ai_score
