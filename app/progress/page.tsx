@@ -9,7 +9,6 @@ export default async function ProgressPage() {
   const session = await auth()
   if (!session) redirect('/login')
 
-  // Guardian reads their first linked child's progress
   let userId: number
   if (session.user.role === 'guardian') {
     const childId = session.user.childIds?.[0]
@@ -22,18 +21,46 @@ export default async function ProgressPage() {
   const progress = await getAllProgress(userId)
 
   return (
-    <div className="min-h-screen max-w-2xl mx-auto">
-      <header style={{ background: '#0B1F3A', padding: '50px 20px 22px' }}>
-        <NavBar role={session.user.role} name={session.user.name ?? ''} />
-        <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 40, height: 40, borderRadius: 11, background: 'rgba(255,255,255,0.1)', color: '#fff', fontSize: 20, textDecoration: 'none', marginBottom: 10 }}>←</Link>
-        <h1 style={{ fontFamily: "'Fredoka', sans-serif", fontSize: 28, fontWeight: 600, color: '#fff', margin: 0 }}>
-          📊 Quest Progress
-        </h1>
-        <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', fontWeight: 600, marginTop: 4 }}>Points earned per track · Summer 2026</p>
-      </header>
-      <main className="px-4 py-6">
-        <ProgressView progress={progress} role={session.user.role} />
-      </main>
+    <div className="hud-page">
+      <div className="hud-shell-wide">
+        <header style={{ padding: '44px 20px 24px' }}>
+          <NavBar role={session.user.role} name={session.user.name ?? ''} />
+          <BackLink href="/" />
+          <p style={eyebrowStyle}>Summer 2026</p>
+          <h1 style={titleStyle}>Quest Progress</h1>
+          <p style={{ fontSize: 13, color: '#6B7793', fontWeight: 600, marginTop: 4 }}>Points earned per track</p>
+        </header>
+        <main className="px-4 py-6">
+          <ProgressView progress={progress} role={session.user.role} />
+        </main>
+      </div>
     </div>
   )
 }
+
+function BackLink({ href }: { href: string }) {
+  return (
+    <Link href={href} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 42, height: 42, borderRadius: 12, background: '#12182A', border: '1px solid rgba(255,255,255,0.08)', textDecoration: 'none', marginBottom: 18 }}>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#C7CEE0" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M15 18l-6-6 6-6" />
+      </svg>
+    </Link>
+  )
+}
+
+const eyebrowStyle = {
+  fontSize: 11,
+  fontWeight: 700,
+  color: '#4A5470',
+  textTransform: 'uppercase',
+  letterSpacing: 2,
+  margin: '0 0 8px',
+} as const
+
+const titleStyle = {
+  fontFamily: "'Space Grotesk', sans-serif",
+  fontSize: 28,
+  fontWeight: 700,
+  color: '#fff',
+  margin: 0,
+} as const

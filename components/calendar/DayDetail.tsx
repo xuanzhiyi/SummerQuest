@@ -94,7 +94,7 @@ export default function DayDetail({ date, entries, canEdit, role, dailyTargets, 
 
   return (
     <div style={{
-      fontFamily: "'Sora', sans-serif", minHeight: '100vh', background: '#0A0E17',
+      fontFamily: "'Sora', sans-serif", minHeight: '100vh', width: '100%', background: '#0A0E17',
       backgroundImage: 'radial-gradient(ellipse 900px 500px at 50% -10%, rgba(124,92,255,0.16), transparent)',
       maxWidth: 480, margin: '0 auto', position: 'relative',
     }}>

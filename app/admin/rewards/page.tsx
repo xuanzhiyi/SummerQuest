@@ -8,7 +8,6 @@ export default async function AdminRewardsPage() {
   const session = await auth()
   if (!session || session.user.role !== 'admin') redirect('/')
 
-  // All pending (requested but not yet actioned) + recent fulfilled
   const pending = await sql`
     SELECT rt.*, ts_label.track AS track_label
     FROM reward_thresholds rt
@@ -25,19 +24,37 @@ export default async function AdminRewardsPage() {
   `
 
   return (
-    <div className="min-h-screen max-w-2xl mx-auto">
-      <header style={{ background: '#0B1F3A', padding: '50px 20px 22px' }}>
-        <NavBar role={session.user.role} name={session.user.name ?? ''} />
-        <h1 style={{ fontFamily: "'Fredoka', sans-serif", fontSize: 28, fontWeight: 600, color: '#fff', margin: 0 }}>
-          🎁 Reward Requests
-        </h1>
-      </header>
-      <main className="px-4 py-6">
-        <RewardsQueue
-          pending={pending as unknown as Record<string, unknown>[]}
-          recent={recent as unknown as Record<string, unknown>[]}
-        />
-      </main>
+    <div className="hud-page">
+      <div className="hud-shell-wide">
+        <header style={{ padding: '44px 20px 24px' }}>
+          <NavBar role={session.user.role} name={session.user.name ?? ''} />
+          <p style={eyebrowStyle}>Admin</p>
+          <h1 style={titleStyle}>Reward Requests</h1>
+        </header>
+        <main className="px-4 py-6">
+          <RewardsQueue
+            pending={pending as unknown as Record<string, unknown>[]}
+            recent={recent as unknown as Record<string, unknown>[]}
+          />
+        </main>
+      </div>
     </div>
   )
 }
+
+const eyebrowStyle = {
+  fontSize: 11,
+  fontWeight: 700,
+  color: '#4A5470',
+  textTransform: 'uppercase',
+  letterSpacing: 2,
+  margin: '0 0 8px',
+} as const
+
+const titleStyle = {
+  fontFamily: "'Space Grotesk', sans-serif",
+  fontSize: 28,
+  fontWeight: 700,
+  color: '#fff',
+  margin: 0,
+} as const

@@ -5,11 +5,55 @@
   --amber: #F59E0B;
   --green: #10B981;
   --cream: #FFFBF5;
+  --hud-bg: #0A0E17;
+  --hud-surface: #12182A;
+  --hud-card-top: #131A2C;
+  --hud-card-bottom: #10151F;
+  --hud-progress: #1A2136;
+  --hud-text: #EDEFF5;
+  --hud-muted: #6B7793;
+  --hud-label: #4A5470;
+  --hud-tile: #C7CEE0;
+  --hud-accent: #4FD1FF;
+  --hud-accent-soft: #A6E9FF;
+  --hud-success: #A3E635;
 }
 
 body {
-  background: var(--cream);
-  color: #111827;
+  background: var(--hud-bg);
+  color: var(--hud-text);
+}
+
+.hud-page {
+  min-height: 100vh;
+  background: var(--hud-bg);
+  background-image: radial-gradient(ellipse 900px 500px at 50% -10%, rgba(124,92,255,0.16), transparent);
+  font-family: 'Sora', sans-serif;
+}
+
+.hud-shell {
+  width: 100%;
+  max-width: 480px;
+  min-height: 100vh;
+  margin: 0 auto;
+}
+
+.hud-shell-wide {
+  width: 100%;
+  max-width: 672px;
+  min-height: 100vh;
+  margin: 0 auto;
+}
+
+.hud-card {
+  background: linear-gradient(180deg, var(--hud-card-top), var(--hud-card-bottom));
+  border: 1px solid rgba(255,255,255,0.07);
+  box-shadow: 0 20px 50px rgba(0,0,0,0.45);
+}
+
+.hud-surface {
+  background: var(--hud-surface);
+  border: 1px solid rgba(255,255,255,0.07);
 }
 
 @keyframes sun-wiggle {

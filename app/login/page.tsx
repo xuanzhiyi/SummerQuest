@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useCallback, useEffect } from 'react'
+import type React from 'react'
 import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 
@@ -10,16 +11,17 @@ interface PublicUser {
   role: 'child' | 'guardian' | 'admin'
 }
 
-const ROLE_ICON: Record<string, string> = {
-  child:    '🧒',
-  guardian: '👴',
-  admin:    '⚙️',
+const ROLE_LABEL: Record<PublicUser['role'], string> = {
+  child: 'Kid',
+  guardian: 'Guardian',
+  admin: 'Admin',
 }
 
-const ROLE_LABEL: Record<string, string> = {
-  child:    'Kid / 孩子',
-  guardian: 'Guardian / 监护人',
-  admin:    'Admin',
+const ACCENT = '#4FD1FF'
+const ACCENT_SOFT = '#A6E9FF'
+
+function initials(name: string) {
+  return name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
 }
 
 export default function LoginPage() {
@@ -45,7 +47,7 @@ export default function LoginPage() {
     })
     setLoading(false)
     if (res?.error) {
-      setError('Wrong PIN — try again. / 密码错误，请重试')
+      setError('Wrong PIN - try again.')
       setPin('')
     } else {
       router.push('/')
@@ -66,40 +68,44 @@ export default function LoginPage() {
   const handleClear = () => { setPin(''); setError('') }
 
   const grouped = {
-    child:    users.filter(u => u.role === 'child'),
+    child: users.filter(u => u.role === 'child'),
     guardian: users.filter(u => u.role === 'guardian'),
-    admin:    users.filter(u => u.role === 'admin'),
+    admin: users.filter(u => u.role === 'admin'),
   }
 
   return (
-    <div
-      className="min-h-screen flex flex-col items-center pt-16 px-6 pb-12"
-      style={{ background: 'linear-gradient(168deg, #081929 0%, #0E3254 38%, #B8600A 78%, #E8860E 100%)' }}
-    >
-      {/* Logo */}
-      <div className="flex flex-col items-center mb-8">
-        <span className="animate-sun inline-block" style={{ fontSize: 80 }}>🌞</span>
-        <h1 style={{ fontFamily: "'Fredoka', sans-serif", fontSize: 46, fontWeight: 600, color: '#fff', letterSpacing: '-0.5px', lineHeight: 1.1 }}>
+    <div className="hud-page flex flex-col items-center px-5" style={{ paddingTop: 56, paddingBottom: 32 }}>
+      <div className="flex flex-col items-center" style={{ marginBottom: 28 }}>
+        <div style={{
+          width: 56, height: 56, borderRadius: 16,
+          background: `linear-gradient(135deg, ${ACCENT}, ${ACCENT_SOFT})`,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          boxShadow: `0 0 24px ${ACCENT}55`, marginBottom: 14,
+        }}>
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#0A0E17" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M13 2L3 14h7l-1 8 11-14h-7l1-6z" />
+          </svg>
+        </div>
+        <h1 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 30, fontWeight: 700, color: '#fff', margin: 0 }}>
           SummerQuest
         </h1>
-        <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.55)', letterSpacing: 3, fontWeight: 700, textTransform: 'uppercase', marginTop: 6 }}>
-          ✦ Summer 2026 ✦
+        <p style={{ fontSize: 11, color: ACCENT, letterSpacing: 3, fontWeight: 700, textTransform: 'uppercase', marginTop: 6 }}>
+          Summer 2026
         </p>
       </div>
 
-      <div className="w-full max-w-sm" style={{ background: '#fff', borderRadius: 28, padding: '28px 22px 24px', boxShadow: '0 28px 80px rgba(0,0,0,0.4)' }}>
+      <div className="hud-card w-full max-w-sm" style={{ borderRadius: 24, padding: '24px 20px' }}>
         {!selected ? (
-          /* User picker */
           <>
-            <p style={{ fontSize: 11, fontWeight: 800, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 2, marginBottom: 16 }}>
-              Who are you? / 你是谁？
+            <p style={{ fontSize: 11, fontWeight: 700, color: '#6B7793', textTransform: 'uppercase', letterSpacing: 2, margin: '0 0 16px' }}>
+              Who are you?
             </p>
             {(['child', 'guardian', 'admin'] as const).map(role => {
               const group = grouped[role]
               if (group.length === 0) return null
               return (
-                <div key={role} style={{ marginBottom: 16 }}>
-                  <p style={{ fontSize: 10, fontWeight: 800, color: '#D1D5DB', textTransform: 'uppercase', letterSpacing: 2, marginBottom: 8 }}>
+                <div key={role} style={{ marginBottom: 18 }}>
+                  <p style={{ fontSize: 10, fontWeight: 700, color: '#4A5470', textTransform: 'uppercase', letterSpacing: 2, margin: '0 0 10px' }}>
                     {ROLE_LABEL[role]}
                   </p>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
@@ -108,14 +114,16 @@ export default function LoginPage() {
                         key={u.id}
                         onClick={() => { setSelected(u); setPin(''); setError('') }}
                         style={{
-                          display: 'flex', alignItems: 'center', gap: 8,
-                          border: '2px solid #E5E7EB', background: '#F9FAFB',
+                          display: 'flex', alignItems: 'center', gap: 10,
+                          border: '1px solid rgba(255,255,255,0.08)', background: '#12182A',
                           borderRadius: 16, padding: '12px 16px',
-                          fontFamily: "'Nunito', sans-serif", fontSize: 15, fontWeight: 800,
-                          color: '#111827', cursor: 'pointer', transition: 'all 0.18s',
+                          fontFamily: "'Sora', sans-serif", fontSize: 15, fontWeight: 700,
+                          color: '#EDEFF5', cursor: 'pointer', transition: 'all 0.18s',
                         }}
                       >
-                        <span style={{ fontSize: 22 }}>{ROLE_ICON[role]}</span>
+                        <span style={{ width: 30, height: 30, borderRadius: 10, background: 'rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Space Grotesk', sans-serif", fontSize: 12, fontWeight: 700, color: '#C7CEE0' }}>
+                          {initials(u.name)}
+                        </span>
                         {u.name}
                       </button>
                     ))}
@@ -125,99 +133,97 @@ export default function LoginPage() {
             })}
           </>
         ) : (
-          /* PIN entry */
           <>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 22 }}>
               <button
                 onClick={() => { setSelected(null); setPin(''); setError('') }}
-                style={{ background: '#F3F4F6', border: 'none', borderRadius: 10, width: 34, height: 34, fontSize: 18, cursor: 'pointer', flexShrink: 0 }}
+                style={{ background: '#12182A', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, width: 36, height: 36, cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
               >
-                ←
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C7CEE0" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M15 18l-6-6 6-6" />
+                </svg>
               </button>
               <div>
-                <p style={{ fontFamily: "'Fredoka', sans-serif", fontSize: 22, fontWeight: 600, color: '#111827', margin: 0, lineHeight: 1.1 }}>
-                  {ROLE_ICON[selected.role]} {selected.name}
+                <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 19, fontWeight: 700, color: '#fff', margin: 0, lineHeight: 1.2 }}>
+                  {selected.name}
                 </p>
-                <p style={{ fontSize: 11, color: '#9CA3AF', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, margin: 0 }}>
+                <p style={{ fontSize: 11, color: '#6B7793', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, margin: 0 }}>
                   {ROLE_LABEL[selected.role]}
                 </p>
               </div>
             </div>
 
-            <p style={{ fontSize: 11, fontWeight: 800, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 2, marginBottom: 14 }}>
-              PIN / 密码
+            <p style={{ fontSize: 11, fontWeight: 700, color: '#6B7793', textTransform: 'uppercase', letterSpacing: 2, margin: '0 0 14px' }}>
+              PIN
             </p>
-            <div className="flex justify-center gap-5 mb-6">
+            <div className="flex justify-center" style={{ gap: 16, marginBottom: 24 }}>
               {[0, 1, 2, 3].map(i => (
                 <div
                   key={i}
                   style={{
-                    width: 17, height: 17, borderRadius: '50%',
-                    background: i < pin.length ? '#F59E0B' : 'transparent',
-                    border: `2px solid ${i < pin.length ? '#F59E0B' : '#D1D5DB'}`,
-                    transition: 'background 0.15s',
+                    width: 14, height: 14, borderRadius: '50%',
+                    background: i < pin.length ? ACCENT : 'transparent',
+                    border: `2px solid ${i < pin.length ? ACCENT : 'rgba(255,255,255,0.2)'}`,
+                    boxShadow: i < pin.length ? `0 0 8px ${ACCENT}` : 'none',
+                    transition: 'all 0.15s',
                   }}
                 />
               ))}
             </div>
 
-            {error && <p className="text-red-500 text-sm text-center mb-3">{error}</p>}
-            {loading && <p className="text-amber-600 text-sm text-center mb-3 font-semibold">Logging in… / 登录中…</p>}
+            {error && <p style={{ color: '#FF5C7A', fontSize: 12, fontWeight: 700, textAlign: 'center', margin: '0 0 12px' }}>{error}</p>}
+            {loading && <p style={{ color: ACCENT, fontSize: 12, fontWeight: 700, textAlign: 'center', margin: '0 0 12px' }}>Logging in...</p>}
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 9 }}>
               {[1,2,3,4,5,6,7,8,9].map(d => (
-                <button
-                  key={d}
-                  onClick={() => handleNumpad(String(d))}
-                  disabled={loading || pin.length >= 4}
-                  style={{
-                    borderRadius: 14, border: '2px solid #F3F4F6', background: '#F9FAFB',
-                    fontFamily: "'Nunito', sans-serif", fontSize: 22, fontWeight: 700,
-                    color: '#111827', padding: '17px 8px', cursor: 'pointer',
-                    opacity: loading ? 0.5 : 1,
-                  }}
-                >
+                <NumpadButton key={d} onClick={() => handleNumpad(String(d))} disabled={loading || pin.length >= 4}>
                   {d}
-                </button>
+                </NumpadButton>
               ))}
               <button
                 onClick={handleClear}
                 disabled={loading}
                 style={{
-                  borderRadius: 14, border: '2px solid #FEE2E2', background: '#FEF2F2',
-                  fontFamily: "'Nunito', sans-serif", fontSize: 13, fontWeight: 800,
-                  color: '#EF4444', padding: '17px 8px', cursor: 'pointer',
+                  borderRadius: 14, border: '1px solid rgba(255,92,122,0.2)', background: 'rgba(255,92,122,0.08)',
+                  fontFamily: "'Sora', sans-serif", fontSize: 12, fontWeight: 700,
+                  color: '#FF5C7A', padding: '16px 8px', cursor: 'pointer',
                 }}
               >
                 Clear
               </button>
-              <button
-                onClick={() => handleNumpad('0')}
-                disabled={loading || pin.length >= 4}
-                style={{
-                  borderRadius: 14, border: '2px solid #F3F4F6', background: '#F9FAFB',
-                  fontFamily: "'Nunito', sans-serif", fontSize: 22, fontWeight: 700,
-                  color: '#111827', padding: '17px 8px', cursor: 'pointer',
-                  opacity: loading ? 0.5 : 1,
-                }}
-              >
-                0
-              </button>
+              <NumpadButton onClick={() => handleNumpad('0')} disabled={loading || pin.length >= 4}>0</NumpadButton>
               <button
                 onClick={() => setPin(p => p.slice(0, -1))}
                 disabled={loading}
                 style={{
-                  borderRadius: 14, border: '2px solid #F3F4F6', background: '#F9FAFB',
-                  fontFamily: "'Nunito', sans-serif", fontSize: 20, fontWeight: 700,
-                  color: '#6B7280', padding: '17px 8px', cursor: 'pointer',
+                  borderRadius: 14, border: '1px solid rgba(255,255,255,0.08)', background: '#12182A',
+                  fontFamily: "'Sora', sans-serif", fontSize: 18, fontWeight: 700,
+                  color: '#9AA4C0', padding: '16px 8px', cursor: 'pointer',
                 }}
               >
-                ⌫
+                ←
               </button>
             </div>
           </>
         )}
       </div>
     </div>
+  )
+}
+
+function NumpadButton({ children, onClick, disabled }: { children: React.ReactNode; onClick: () => void; disabled: boolean }) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      style={{
+        borderRadius: 14, border: '1px solid rgba(255,255,255,0.08)', background: '#12182A',
+        fontFamily: "'Space Grotesk', sans-serif", fontSize: 21, fontWeight: 700,
+        color: '#EDEFF5', padding: '16px 8px', cursor: 'pointer',
+        opacity: disabled ? 0.5 : 1,
+      }}
+    >
+      {children}
+    </button>
   )
 }

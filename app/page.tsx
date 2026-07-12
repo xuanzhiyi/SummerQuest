@@ -23,8 +23,10 @@ export default async function HomePage() {
   const tiles = await getCalendarTiles(userId)
 
   return (
-    <div className="min-h-screen max-w-lg mx-auto" style={{ background: '#FFFBF5' }}>
-      <CalendarGrid tiles={tiles} role={session.user.role} name={viewingName} perfectThreshold={perfectThreshold} />
+    <div className="hud-page">
+      <div className="hud-shell">
+        <CalendarGrid tiles={tiles} role={session.user.role} name={viewingName} perfectThreshold={perfectThreshold} />
+      </div>
     </div>
   )
 }

@@ -12,19 +12,37 @@ export default async function AdminUsersPage() {
   const links = await sql`SELECT guardian_id, child_id FROM guardian_children`
 
   return (
-    <div className="min-h-screen max-w-2xl mx-auto">
-      <header style={{ background: '#0B1F3A', padding: '50px 20px 22px' }}>
-        <NavBar role={session.user.role} name={session.user.name ?? ''} />
-        <h1 style={{ fontFamily: "'Fredoka', sans-serif", fontSize: 28, fontWeight: 600, color: '#fff', margin: 0 }}>
-          👥 Users
-        </h1>
-      </header>
-      <main className="px-4 py-6">
-        <UserManagement
-          initialUsers={users as unknown as Record<string, unknown>[]}
-          initialLinks={links as unknown as Record<string, unknown>[]}
-        />
-      </main>
+    <div className="hud-page">
+      <div className="hud-shell-wide">
+        <header style={{ padding: '44px 20px 24px' }}>
+          <NavBar role={session.user.role} name={session.user.name ?? ''} />
+          <p style={eyebrowStyle}>Admin</p>
+          <h1 style={titleStyle}>Users</h1>
+        </header>
+        <main className="px-4 py-6">
+          <UserManagement
+            initialUsers={users as unknown as Record<string, unknown>[]}
+            initialLinks={links as unknown as Record<string, unknown>[]}
+          />
+        </main>
+      </div>
     </div>
   )
 }
+
+const eyebrowStyle = {
+  fontSize: 11,
+  fontWeight: 700,
+  color: '#4A5470',
+  textTransform: 'uppercase',
+  letterSpacing: 2,
+  margin: '0 0 8px',
+} as const
+
+const titleStyle = {
+  fontFamily: "'Space Grotesk', sans-serif",
+  fontSize: 28,
+  fontWeight: 700,
+  color: '#fff',
+  margin: 0,
+} as const

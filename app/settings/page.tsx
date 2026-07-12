@@ -11,7 +11,6 @@ export default async function GuardianSettingsPage() {
   if (session.user.role === 'child') redirect('/')
   if (session.user.role === 'admin') redirect('/admin/settings')
 
-  // Resolve child
   const childId = session.user.childIds?.[0]
   if (!childId) redirect('/')
 
@@ -24,27 +23,42 @@ export default async function GuardianSettingsPage() {
   ])
 
   return (
-    <div className="min-h-screen max-w-2xl mx-auto">
-      <header style={{ background: '#0B1F3A', padding: '50px 20px 22px' }}>
-        <NavBar role={session.user.role} name={session.user.name ?? ''} />
-        <Link
-          href="/"
-          style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 40, height: 40, borderRadius: 11, background: 'rgba(255,255,255,0.1)', color: '#fff', fontSize: 20, textDecoration: 'none', marginBottom: 10 }}
-        >
-          ←
-        </Link>
-        <h1 style={{ fontFamily: "'Fredoka', sans-serif", fontSize: 28, fontWeight: 600, color: '#fff', margin: 0 }}>
-          ⚙️ Settings for {String(child.name)}
-        </h1>
-      </header>
-      <main className="px-4 py-6">
-        <SettingsForm
-          settings={settings as unknown as Record<string, unknown>[]}
-          thresholds={thresholds as unknown as Record<string, unknown>[]}
-          childUserId={childId}
-          perfectDayThreshold={child.perfect_day_threshold != null ? Number(child.perfect_day_threshold) : null}
-        />
-      </main>
+    <div className="hud-page">
+      <div className="hud-shell-wide">
+        <header style={{ padding: '44px 20px 24px' }}>
+          <NavBar role={session.user.role} name={session.user.name ?? ''} />
+          <Link href="/" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 42, height: 42, borderRadius: 12, background: '#12182A', border: '1px solid rgba(255,255,255,0.08)', textDecoration: 'none', marginBottom: 18 }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#C7CEE0" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
+          </Link>
+          <p style={eyebrowStyle}>Settings</p>
+          <h1 style={titleStyle}>Settings for {String(child.name)}</h1>
+        </header>
+        <main className="px-4 py-6">
+          <SettingsForm
+            settings={settings as unknown as Record<string, unknown>[]}
+            thresholds={thresholds as unknown as Record<string, unknown>[]}
+            childUserId={childId}
+            perfectDayThreshold={child.perfect_day_threshold != null ? Number(child.perfect_day_threshold) : null}
+          />
+        </main>
+      </div>
     </div>
   )
 }
+
+const eyebrowStyle = {
+  fontSize: 11,
+  fontWeight: 700,
+  color: '#4A5470',
+  textTransform: 'uppercase',
+  letterSpacing: 2,
+  margin: '0 0 8px',
+} as const
+
+const titleStyle = {
+  fontFamily: "'Space Grotesk', sans-serif",
+  fontSize: 28,
+  fontWeight: 700,
+  color: '#fff',
+  margin: 0,
+} as const

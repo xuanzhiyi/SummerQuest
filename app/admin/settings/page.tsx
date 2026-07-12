@@ -13,16 +13,34 @@ export default async function AdminSettingsPage() {
   for (const r of rows) systemSettings[r.key as string] = r.value as string
 
   return (
-    <div className="min-h-screen max-w-2xl mx-auto">
-      <header style={{ background: '#0B1F3A', padding: '50px 20px 22px' }}>
-        <NavBar role={session.user.role} name={session.user.name ?? ''} />
-        <h1 style={{ fontFamily: "'Fredoka', sans-serif", fontSize: 28, fontWeight: 600, color: '#fff', margin: 0 }}>
-          ⚙️ System Settings
-        </h1>
-      </header>
-      <main className="px-4 py-6">
-        <SystemSettingsForm settings={systemSettings} />
-      </main>
+    <div className="hud-page">
+      <div className="hud-shell-wide">
+        <header style={{ padding: '44px 20px 24px' }}>
+          <NavBar role={session.user.role} name={session.user.name ?? ''} />
+          <p style={eyebrowStyle}>Admin</p>
+          <h1 style={titleStyle}>System Settings</h1>
+        </header>
+        <main className="px-4 py-6">
+          <SystemSettingsForm settings={systemSettings} />
+        </main>
+      </div>
     </div>
   )
 }
+
+const eyebrowStyle = {
+  fontSize: 11,
+  fontWeight: 700,
+  color: '#4A5470',
+  textTransform: 'uppercase',
+  letterSpacing: 2,
+  margin: '0 0 8px',
+} as const
+
+const titleStyle = {
+  fontFamily: "'Space Grotesk', sans-serif",
+  fontSize: 28,
+  fontWeight: 700,
+  color: '#fff',
+  margin: 0,
+} as const

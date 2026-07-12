@@ -100,18 +100,20 @@ export default async function DayPage({ params }: Props) {
   }
 
   return (
-    <div className="max-w-lg mx-auto">
-      <DayDetail
-        date={date}
-        entries={entries}
-        canEdit={canEdit}
-        showScores={role === 'admin'}
-        role={role}
-        dailyTargets={dailyTargets}
-        earnedXP={earnedXP}
-        xpPerTrack={xpPerTrack}
-        name={session.user.name ?? ''}
-      />
+    <div className="min-h-screen bg-[#0A0E17]">
+      <div className="max-w-lg mx-auto">
+        <DayDetail
+          date={date}
+          entries={entries}
+          canEdit={canEdit}
+          showScores={role === 'admin'}
+          role={role}
+          dailyTargets={dailyTargets}
+          earnedXP={earnedXP}
+          xpPerTrack={xpPerTrack}
+          name={session.user.name ?? ''}
+        />
+      </div>
     </div>
   )
 }

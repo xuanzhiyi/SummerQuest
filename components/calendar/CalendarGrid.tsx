@@ -1,7 +1,9 @@
 'use client'
 
 import { useState } from 'react'
+import type React from 'react'
 import Link from 'next/link'
+import { signOut } from 'next-auth/react'
 import { type DayTile, TOTAL_QUESTS } from '@/types'
 
 interface Props {
@@ -11,23 +13,21 @@ interface Props {
   perfectThreshold?: number | null
 }
 
+const ACCENT = '#4FD1FF'
 const DAY_HEADERS = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
 const WEEKEND_IDX = new Set([5, 6])
-
 const TODAY = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Helsinki' }).format(new Date())
 
 function isFuture(date: string) { return date > TODAY }
-function isToday(date: string)  { return date === TODAY }
+function isToday(date: string) { return date === TODAY }
 
 function getDowIndex(date: string) {
   const d = new Date(date + 'T12:00:00').getDay()
-  return d === 0 ? 6 : d - 1 // Mon=0 … Sun=6
+  return d === 0 ? 6 : d - 1
 }
 
 export default function CalendarGrid({ tiles, role, name, perfectThreshold }: Props) {
   const perfectGoal = perfectThreshold ?? TOTAL_QUESTS
-
-  // Determine available months from tiles
   const months = [...new Set(tiles.map(t => t.date.slice(0, 7)))].sort()
   const initialMonth = months.find(m => m === TODAY.slice(0, 7)) ?? months[0] ?? TODAY.slice(0, 7)
   const [activeMonth, setActiveMonth] = useState(initialMonth)
@@ -35,16 +35,13 @@ export default function CalendarGrid({ tiles, role, name, perfectThreshold }: Pr
   const monthIdx = months.indexOf(activeMonth)
   const canPrev = monthIdx > 0
   const canNext = monthIdx < months.length - 1
-
   const monthTiles = tiles.filter(t => t.date.startsWith(activeMonth))
 
-  // Stats across all time (not just this month)
   const pastTiles = tiles.filter(t => !isFuture(t.date))
   const perfectDays = pastTiles.filter(t => t.completed_quests >= perfectGoal).length
   const totalXP = pastTiles.reduce((s, t) => s + t.total_points, 0)
   const totalQuestsDone = pastTiles.reduce((s, t) => s + t.completed_quests, 0)
 
-  // Build calendar grid with padding
   const weeks: (DayTile | null)[][] = []
   let week: (DayTile | null)[] = []
   const prefixPad = monthTiles.length > 0 ? getDowIndex(monthTiles[0].date) : 0
@@ -61,71 +58,55 @@ export default function CalendarGrid({ tiles, role, name, perfectThreshold }: Pr
   const monthLabel = new Date(activeMonth + '-15').toLocaleString('en', { month: 'long', year: 'numeric' })
 
   return (
-    <div style={{ fontFamily: "'Nunito', sans-serif" }}>
-      {/* Navy Header */}
-      <header style={{ background: '#0B1F3A', padding: '50px 20px 18px', position: 'relative' }}>
-        {/* Admin/Progress links + sign out */}
-        <div className="flex justify-between items-center mb-3" style={{ fontSize: 11, color: 'rgba(255,255,255,0.45)' }}>
-          <div className="flex gap-3">
+    <div style={{ fontFamily: "'Sora', sans-serif" }}>
+      <header style={{ padding: '44px 20px 20px' }}>
+        <div className="flex justify-between items-center" style={{ marginBottom: 22, fontSize: 11 }}>
+          <div className="flex gap-4">
             {role === 'admin' && (
               <>
-                <Link href="/admin/settings" style={{ color: 'rgba(255,255,255,0.5)', textDecoration: 'none', fontWeight: 700 }}>Settings</Link>
-                <Link href="/admin/rewards" style={{ color: 'rgba(255,255,255,0.5)', textDecoration: 'none', fontWeight: 700 }}>Rewards</Link>
+                <Link href="/admin/settings" style={navLinkStyle}>Settings</Link>
+                <Link href="/admin/rewards" style={navLinkStyle}>Rewards</Link>
               </>
             )}
-            <Link href="/progress" style={{ color: 'rgba(255,255,255,0.5)', textDecoration: 'none', fontWeight: 700 }}>Progress</Link>
+            {role === 'guardian' && <Link href="/settings" style={navLinkStyle}>Settings</Link>}
+            <Link href="/progress" style={navLinkStyle}>Progress</Link>
           </div>
-          <SignOutButton name={name} />
+          <button onClick={() => signOut({ callbackUrl: '/login' })} style={signOutStyle}>
+            {name} · Sign out
+          </button>
         </div>
 
-        <p style={{ fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', letterSpacing: 2, marginBottom: 14 }}>
-          🌞 SUMMERQUEST
+        <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 12, fontWeight: 700, color: ACCENT, textTransform: 'uppercase', letterSpacing: 3, margin: '0 0 16px' }}>
+          SummerQuest
         </p>
 
-        {/* Month navigation */}
         <div className="flex items-center justify-between">
-          <button
-            onClick={() => canPrev && setActiveMonth(months[monthIdx - 1])}
-            disabled={!canPrev}
-            style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', fontSize: 22, cursor: canPrev ? 'pointer' : 'default', opacity: canPrev ? 1 : 0.3 }}
-          >
-            ‹
-          </button>
-          <h2 style={{ fontFamily: "'Fredoka', sans-serif", fontSize: 28, fontWeight: 600, color: '#fff', minWidth: 200, textAlign: 'center' }}>
+          <MonthButton disabled={!canPrev} onClick={() => canPrev && setActiveMonth(months[monthIdx - 1])} direction="prev" />
+          <h2 style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 24, fontWeight: 700, color: '#fff', margin: 0, textAlign: 'center', minWidth: 190 }}>
             {monthLabel}
           </h2>
-          <button
-            onClick={() => canNext && setActiveMonth(months[monthIdx + 1])}
-            disabled={!canNext}
-            style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', fontSize: 22, cursor: canNext ? 'pointer' : 'default', opacity: canNext ? 1 : 0.3 }}
-          >
-            ›
-          </button>
+          <MonthButton disabled={!canNext} onClick={() => canNext && setActiveMonth(months[monthIdx + 1])} direction="next" />
         </div>
       </header>
 
-      {/* Stats strip */}
-      <div style={{ display: 'flex', gap: 10, margin: '16px 14px 0' }}>
-        <StatCard flex={1} bg="#D1FAE5" label="Perfect" labelColor="#065F46" value={String(perfectDays)} valueColor="#065F46" />
-        <StatCard flex={1.4} bg="#FEF3C7" label="XP Earned" labelColor="#92400E" value={String(totalXP)} valueColor="#F59E0B" />
-        <StatCard flex={1} bg="#EFF6FF" label="Quests" labelColor="#1D4ED8" value={String(totalQuestsDone)} valueColor="#1D4ED8" />
+      <div style={{ display: 'flex', gap: 10, padding: '0 16px 20px' }}>
+        <StatCard flex={1} color="#A3E635" label="Perfect" value={String(perfectDays)} />
+        <StatCard flex={1.4} color="#FFB648" label="XP Earned" value={String(totalXP)} />
+        <StatCard flex={1} color="#4FD1FF" label="Quests" value={String(totalQuestsDone)} />
       </div>
 
-      {/* Calendar */}
-      <div style={{ padding: '16px 14px 24px' }}>
-        {/* Day-of-week headers */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4, marginBottom: 6 }}>
+      <div style={{ padding: '0 16px 20px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 4, marginBottom: 8 }}>
           {DAY_HEADERS.map((d, i) => (
-            <div key={i} style={{ textAlign: 'center', fontSize: 11, fontWeight: 800, color: WEEKEND_IDX.has(i) ? '#C2410C' : '#9CA3AF' }}>
+            <div key={i} style={{ textAlign: 'center', fontSize: 11, fontWeight: 700, color: WEEKEND_IDX.has(i) ? '#FF7A9C' : '#4A5470' }}>
               {d}
             </div>
           ))}
         </div>
 
-        {/* Weeks */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           {weeks.map((wk, wi) => (
-            <div key={wi} style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 5 }}>
+            <div key={wi} style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 6 }}>
               {wk.map((tile, ci) =>
                 tile
                   ? <DayCell key={tile.date} tile={tile} perfectGoal={perfectGoal} />
@@ -136,14 +117,32 @@ export default function CalendarGrid({ tiles, role, name, perfectThreshold }: Pr
         </div>
       </div>
 
-      {/* Legend */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 14, padding: '0 14px 24px' }}>
-        <LegendItem color="#D1FAE5" textColor="#065F46" label="All done / 全部完成" />
-        <LegendItem color="#FDE68A" textColor="#92400E" label="Partial / 部分完成" />
-        <LegendItem color="#F3F4F6" textColor="#9CA3AF" label="No quests / 未开始" />
-        <LegendItem color="transparent" textColor="#D1D5DB" label="Future / 未来" />
+      <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 14, padding: '0 16px 40px' }}>
+        <LegendItem color="rgba(163,230,53,0.14)" border="1px solid #A3E635" label="All done" />
+        <LegendItem color="rgba(255,182,72,0.14)" border="1px solid #FFB648" label="Partial" />
+        <LegendItem color="rgba(255,255,255,0.04)" border="1px solid rgba(255,255,255,0.08)" label="No quests" />
+        <LegendItem color="transparent" border="1px solid rgba(255,255,255,0.15)" label="Future" />
       </div>
     </div>
+  )
+}
+
+function MonthButton({ disabled, onClick, direction }: { disabled: boolean; onClick: () => void; direction: 'prev' | 'next' }) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      style={{
+        width: 38, height: 38, borderRadius: 11, background: '#12182A',
+        border: '1px solid rgba(255,255,255,0.08)', display: 'flex',
+        alignItems: 'center', justifyContent: 'center', cursor: disabled ? 'default' : 'pointer',
+        opacity: disabled ? 0.3 : 1,
+      }}
+    >
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C7CEE0" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
+        <path d={direction === 'prev' ? 'M15 18l-6-6 6-6' : 'M9 18l6-6-6-6'} />
+      </svg>
+    </button>
   )
 }
 
@@ -155,35 +154,41 @@ function DayCell({ tile, perfectGoal }: { tile: DayTile; perfectGoal: number }) 
   const allDone = done >= perfectGoal
   const partial = done > 0 && !allDone
 
-  let bg = '#F3F4F6'
-  let color = '#9CA3AF'
+  let bg = 'rgba(255,255,255,0.04)'
+  let color = '#4A5470'
+  let border = '1px solid rgba(255,255,255,0.04)'
   let boxShadow = 'none'
 
   if (future) {
     bg = 'transparent'
-    color = '#D1D5DB'
+    color = '#2A3350'
+    border = '1px solid rgba(255,255,255,0.03)'
   } else if (today) {
-    bg = '#FEF3C7'
-    color = '#92400E'
-    boxShadow = '0 0 0 3px #F59E0B'
+    bg = 'rgba(255,255,255,0.05)'
+    color = ACCENT
+    border = `2px solid ${ACCENT}`
+    boxShadow = `0 0 10px ${ACCENT}55`
   } else if (allDone) {
-    bg = '#D1FAE5'
-    color = '#065F46'
+    bg = 'rgba(163,230,53,0.14)'
+    color = '#A3E635'
+    border = '1px solid rgba(163,230,53,0.25)'
   } else if (partial) {
-    bg = '#FDE68A'
-    color = '#92400E'
+    bg = 'rgba(255,182,72,0.14)'
+    color = '#FFB648'
+    border = '1px solid rgba(255,182,72,0.25)'
   }
 
   const inner = (
     <div style={{
-      aspectRatio: '1', borderRadius: '50%',
-      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-      background: bg, color, boxShadow,
-      cursor: future ? 'default' : 'pointer',
+      aspectRatio: '1', borderRadius: '50%', display: 'flex', flexDirection: 'column',
+      alignItems: 'center', justifyContent: 'center', background: bg, border,
+      boxShadow, cursor: future ? 'default' : 'pointer',
     }}>
-      <span style={{ fontSize: 13, fontWeight: 800, lineHeight: 1 }}>{dayNum}</span>
+      <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 13, fontWeight: 700, color, lineHeight: 1 }}>
+        {dayNum}
+      </span>
       {done > 0 && !future && (
-        <span style={{ fontSize: 9, fontWeight: 700, lineHeight: 1, marginTop: 1, opacity: 0.85 }}>
+        <span style={{ fontSize: 8, fontWeight: 700, color, opacity: 0.85, marginTop: 2 }}>
           {done}/{TOTAL_QUESTS}
         </span>
       )}
@@ -194,40 +199,41 @@ function DayCell({ tile, perfectGoal }: { tile: DayTile; perfectGoal: number }) 
   return <Link href={`/day/${tile.date}`} style={{ textDecoration: 'none' }}>{inner}</Link>
 }
 
-function StatCard({ flex, bg, label, labelColor, value, valueColor }: {
-  flex: number; bg: string; label: string; labelColor: string; value: string; valueColor: string
-}) {
+function StatCard({ flex, color, label, value }: { flex: number; color: string; label: string; value: string }) {
   return (
-    <div style={{ flex, background: bg, borderRadius: 16, padding: '12px 8px', textAlign: 'center' }}>
-      <p style={{ fontSize: 10, fontWeight: 800, color: labelColor, textTransform: 'uppercase', letterSpacing: 1, margin: 0 }}>
+    <div style={{ flex, background: `${color}14`, border: `1px solid ${color}2e`, borderRadius: 16, padding: '12px 8px', textAlign: 'center' }}>
+      <p style={{ fontSize: 10, fontWeight: 700, color, textTransform: 'uppercase', letterSpacing: 1, margin: '0 0 4px' }}>
         {label}
       </p>
-      <p style={{ fontFamily: "'Fredoka', sans-serif", fontSize: 26, fontWeight: 600, color: valueColor, margin: 0, lineHeight: 1.1 }}>
+      <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 24, fontWeight: 700, color, margin: 0, lineHeight: 1.1 }}>
         {value}
       </p>
     </div>
   )
 }
 
-function LegendItem({ color, textColor, label }: { color: string; textColor: string; label: string }) {
+function LegendItem({ color, border, label }: { color: string; border: string; label: string }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-      <div style={{ width: 12, height: 12, borderRadius: '50%', background: color, border: color === 'transparent' ? '1.5px solid #D1D5DB' : 'none', flexShrink: 0 }} />
-      <span style={{ fontSize: 11, fontWeight: 700, color: '#6B7280' }}>{label}</span>
+      <div style={{ width: 11, height: 11, borderRadius: '50%', background: color, border, flexShrink: 0 }} />
+      <span style={{ fontSize: 11, fontWeight: 700, color: '#6B7793' }}>{label}</span>
     </div>
   )
 }
 
-function SignOutButton({ name }: { name: string }) {
-  return (
-    <button
-      onClick={async () => {
-        const { signOut } = await import('next-auth/react')
-        signOut({ callbackUrl: '/login' })
-      }}
-      style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.45)', cursor: 'pointer', fontSize: 11, fontWeight: 700 }}
-    >
-      {name} · Sign out
-    </button>
-  )
-}
+const navLinkStyle = {
+  color: '#6B7793',
+  textDecoration: 'none',
+  fontWeight: 700,
+  letterSpacing: 0.3,
+} satisfies React.CSSProperties
+
+const signOutStyle = {
+  background: 'none',
+  border: 'none',
+  color: '#6B7793',
+  cursor: 'pointer',
+  fontSize: 11,
+  fontWeight: 700,
+  fontFamily: 'inherit',
+} satisfies React.CSSProperties
