@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
   const trackName = `word_${language_pair}`
   const [settings] = await sql`SELECT points_per_entry, daily_point_cap FROM track_settings WHERE track = ${trackName} AND child_user_id = ${userId}`
   const basePoints = settings?.points_per_entry ?? 10
-  const earnedRaw = Math.round(basePoints * (score / 100))
+  const earnedRaw = score === 100 ? basePoints : 0
 
   // Enforce daily point cap if set
   let points = earnedRaw
