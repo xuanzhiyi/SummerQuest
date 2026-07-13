@@ -92,7 +92,7 @@ export default function ProblemSetForm({ date, track, onSaved }: Props) {
           onChange={(e) => setAnswers(e.target.value)}
           placeholder={"1. …\n2. …\n3. …"}
           rows={5}
-          className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-amber-300 resize-none"
+          className="w-full border border-[rgba(255,255,255,0.12)] bg-[#1A2136] rounded-xl px-3 py-2 text-sm text-[#EDEFF5] placeholder:text-[#6B7793] focus:outline-none focus:ring-2 focus:ring-amber-300 resize-none"
           required
         />
       </div>

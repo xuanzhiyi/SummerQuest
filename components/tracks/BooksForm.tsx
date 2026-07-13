@@ -61,7 +61,7 @@ export default function BooksForm({ date, onSaved }: Props) {
           onChange={(e) => setAnswer(e.target.value)}
           placeholder="Your answer…"
           rows={3}
-          className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-amber-300 resize-none"
+          className="w-full border border-[rgba(255,255,255,0.12)] bg-[#1A2136] rounded-lg px-3 py-2 text-sm text-[#EDEFF5] placeholder:text-[#6B7793] focus:outline-none focus:ring-2 focus:ring-amber-300 resize-none"
           required
         />
         {error && <p className="text-red-500 text-xs">{error}</p>}
@@ -94,7 +94,7 @@ export default function BooksForm({ date, onSaved }: Props) {
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="What are you reading?"
-          className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-amber-300"
+          className="w-full border border-[rgba(255,255,255,0.12)] bg-[#1A2136] rounded-lg px-3 py-2 text-sm text-[#EDEFF5] placeholder:text-[#6B7793] focus:outline-none focus:ring-2 focus:ring-amber-300"
           required
         />
       </div>
@@ -105,7 +105,7 @@ export default function BooksForm({ date, onSaved }: Props) {
           onChange={(e) => setNotes(e.target.value)}
           placeholder="Write in your own words…"
           rows={4}
-          className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-amber-300 resize-none"
+          className="w-full border border-[rgba(255,255,255,0.12)] bg-[#1A2136] rounded-lg px-3 py-2 text-sm text-[#EDEFF5] placeholder:text-[#6B7793] focus:outline-none focus:ring-2 focus:ring-amber-300 resize-none"
           required
         />
       </div>

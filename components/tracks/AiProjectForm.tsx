@@ -75,7 +75,7 @@ export default function AiProjectForm({ date, onSaved }: Props) {
           onChange={(e) => setCaption(e.target.value)}
           placeholder="Describe what you made or experimented with…"
           rows={3}
-          className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-amber-300 resize-none"
+          className="w-full border border-[rgba(255,255,255,0.12)] bg-[#1A2136] rounded-lg px-3 py-2 text-sm text-[#EDEFF5] placeholder:text-[#6B7793] focus:outline-none focus:ring-2 focus:ring-amber-300 resize-none"
           required
         />
       </div>

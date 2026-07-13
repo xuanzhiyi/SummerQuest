@@ -83,7 +83,7 @@ export default function DiaryForm({ date, onSaved }: Props) {
           onChange={e => setText(e.target.value)}
           placeholder="Write about your day… / 写写今天发生的事…"
           rows={7}
-          className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-amber-300 resize-none"
+          className="w-full border border-[rgba(255,255,255,0.12)] bg-[#1A2136] rounded-xl px-3 py-2 text-sm text-[#EDEFF5] placeholder:text-[#6B7793] focus:outline-none focus:ring-2 focus:ring-amber-300 resize-none"
           required
         />
       </div>
