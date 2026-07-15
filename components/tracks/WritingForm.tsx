@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { ENGLISH_WRITING_PROMPTS, FINNISH_WRITING_PROMPTS } from '@/lib/ai/prompts'
+import { MIN_WRITING_CHARACTERS, writingCharacterCount } from '@/lib/writing-validation'
 
 interface Props {
   date: string
@@ -9,15 +10,25 @@ interface Props {
   onSaved: (entry: unknown, points: number) => void
 }
 
+function randomPrompt(prompts: string[], current?: string) {
+  if (prompts.length <= 1) return prompts[0] ?? ''
+  let next = prompts[Math.floor(Math.random() * prompts.length)]
+  while (next === current) {
+    next = prompts[Math.floor(Math.random() * prompts.length)]
+  }
+  return next
+}
+
 export default function WritingForm({ date, track, onSaved }: Props) {
   const prompts = track === 'english' ? ENGLISH_WRITING_PROMPTS : FINNISH_WRITING_PROMPTS
-  const [selectedPrompt, setSelectedPrompt] = useState(prompts[Math.floor(Math.random() * prompts.length)])
+  const [selectedPrompt, setSelectedPrompt] = useState(randomPrompt(prompts))
   const [paragraph, setParagraph] = useState('')
   const [result, setResult] = useState<{ feedback: string; ai_score?: number } | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  const wordCount = paragraph.trim().split(/\s+/).filter(Boolean).length
+  const characterCount = writingCharacterCount(paragraph)
+  const hasMinimumLength = characterCount >= MIN_WRITING_CHARACTERS
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -65,8 +76,7 @@ export default function WritingForm({ date, track, onSaved }: Props) {
           <button
             type="button"
             onClick={() => {
-              const next = prompts[Math.floor(Math.random() * prompts.length)]
-              setSelectedPrompt(next)
+              setSelectedPrompt(randomPrompt(prompts, selectedPrompt))
             }}
             className="text-xs text-amber-500 hover:text-amber-700"
           >
@@ -79,9 +89,9 @@ export default function WritingForm({ date, track, onSaved }: Props) {
       </div>
       <div>
         <div className="flex items-center justify-between mb-1">
-          <label className="block text-xs font-medium text-gray-500">Your paragraph (~100 words)</label>
-          <span className={`text-xs ${wordCount >= 80 ? 'text-green-600' : 'text-gray-400'}`}>
-            {wordCount} words
+          <label className="block text-xs font-medium text-gray-500">Your writing</label>
+          <span className={`text-xs ${hasMinimumLength ? 'text-green-600' : 'text-gray-400'}`}>
+            {characterCount}/{MIN_WRITING_CHARACTERS} characters
           </span>
         </div>
         <textarea
@@ -96,7 +106,7 @@ export default function WritingForm({ date, track, onSaved }: Props) {
       {error && <p className="text-red-500 text-xs">{error}</p>}
       <button
         type="submit"
-        disabled={loading || wordCount < 20}
+        disabled={loading || !hasMinimumLength}
         className="w-full bg-amber-400 hover:bg-amber-500 disabled:opacity-50 text-white font-semibold rounded-lg py-2 text-sm transition-colors"
       >
         {loading ? 'Submitting… (AI grading 🤔)' : 'Submit writing ✓'}

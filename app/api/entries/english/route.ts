@@ -5,6 +5,7 @@ import { todayDate } from '@/lib/calendar'
 import { generateText } from '@/lib/ai/client'
 import { englishFeedbackPrompt, extractScore } from '@/lib/ai/prompts'
 import { getConfiguredAiModel } from '@/lib/ai/settings'
+import { validateWritingLength } from '@/lib/writing-validation'
 
 export async function POST(req: NextRequest) {
   const session = await auth()
@@ -14,6 +15,10 @@ export async function POST(req: NextRequest) {
 
   const { date, paragraph, prompt_used } = await req.json()
   if (!date || !paragraph) return NextResponse.json({ error: 'Missing fields' }, { status: 400 })
+  const lengthValidation = validateWritingLength(paragraph)
+  if (!lengthValidation.ok) {
+    return NextResponse.json({ error: lengthValidation.error, character_count: lengthValidation.count }, { status: 400 })
+  }
 
   const userId = parseInt(session.user.id)
 

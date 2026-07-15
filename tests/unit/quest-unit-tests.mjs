@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import { computeWordPairingResult } from '../../lib/word-pairing-scoring.js'
+import { MIN_WRITING_CHARACTERS, validateWritingLength, writingCharacterCount } from '../../lib/writing-validation.ts'
 
 const root = new URL('../../', import.meta.url)
 const tests = []
@@ -146,6 +147,46 @@ test('daily and admin quest UIs depend on the central quest registry', async () 
 
   for (const file of files) {
     assert.doesNotMatch(file, /const TRACK_LABELS/)
+  }
+})
+
+test('writing prompts use a 100-topic pool instead of the old repeated prompts', async () => {
+  const prompts = await source('lib/ai/prompts.ts')
+  const topicBlock = prompts.match(/const WRITING_TOPIC_STEMS = \[([\s\S]*?)\n\]/)
+  assert.ok(topicBlock, 'WRITING_TOPIC_STEMS should exist')
+
+  const topics = [...topicBlock[1].matchAll(/'([^']+)'/g)].map((match) => match[1])
+  assert.equal(topics.length, 100)
+  assert.equal(new Set(topics).size, 100)
+  assert.match(prompts, /export const ENGLISH_WRITING_PROMPTS = WRITING_TOPIC_STEMS\.map/)
+  assert.match(prompts, /export const FINNISH_WRITING_PROMPTS = WRITING_TOPIC_STEMS\.map/)
+  assert.doesNotMatch(prompts, /export const ENGLISH_WRITING_PROMPTS = \[\s*'Describe your perfect summer day\.'/)
+  assert.doesNotMatch(prompts, /export const FINNISH_WRITING_PROMPTS = \[/)
+})
+
+test('writing validation enforces a 500-character minimum consistently', () => {
+  assert.equal(MIN_WRITING_CHARACTERS, 500)
+  assert.equal(writingCharacterCount(`  ${'a'.repeat(500)}  `), 500)
+  assert.deepEqual(validateWritingLength('a'.repeat(500)), { ok: true, count: 500 })
+
+  const short = validateWritingLength('a'.repeat(499))
+  assert.equal(short.ok, false)
+  assert.equal(short.count, 499)
+  assert.match(short.error, /at least 500 characters/)
+})
+
+test('writing UI and APIs use shared 500-character validation', async () => {
+  const form = await source('components/tracks/WritingForm.tsx')
+  const englishRoute = await source('app/api/entries/english/route.ts')
+  const finnishRoute = await source('app/api/entries/finnish/route.ts')
+
+  assert.match(form, /MIN_WRITING_CHARACTERS/)
+  assert.match(form, /writingCharacterCount\(paragraph\)/)
+  assert.match(form, /disabled=\{loading \|\| !hasMinimumLength\}/)
+
+  for (const route of [englishRoute, finnishRoute]) {
+    assert.match(route, /validateWritingLength\(paragraph\)/)
+    assert.match(route, /character_count: lengthValidation\.count/)
   }
 })
 
