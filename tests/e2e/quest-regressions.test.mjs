@@ -86,8 +86,28 @@ test('reading exercise difficulty levels come from track_settings', async () => 
     const route = await source(path)
     assert.match(route, new RegExp(`current_level FROM track_settings WHERE track = '${track}'`))
     assert.match(route, /const level = settings\?\.current_level \?\? 5/)
-    assert.match(route, /generateText\([^,\n]+\(level\),\s*aiModel\)/)
+    assert.match(route, /generateText\(withReadingTopic\([^,\n]+\(level\)\),\s*aiModel\)/)
   }
+})
+
+test('reading routes send a hard-coded random topic to live AI generation', async () => {
+  const routes = [
+    ['app/api/entries/chinese/route.ts', 'chinese'],
+    ['app/api/entries/swedish/route.ts', 'swedish'],
+    ['app/api/entries/french/route.ts', 'french'],
+    ['app/api/entries/english-reading/route.ts', 'english_reading'],
+    ['app/api/entries/finnish-reading/route.ts', 'finnish_reading'],
+  ]
+
+  for (const [path, language] of routes) {
+    const route = await source(path)
+    assert.match(route, /withReadingTopic/)
+    assert.doesNotMatch(route, /getRecentReadingTexts/)
+  }
+
+  const topics = await source('lib/reading-topics.ts')
+  assert.match(topics, /export const READING_TOPICS = \[/)
+  assert.match(topics, /export function withReadingTopic/)
 })
 
 test('AI-generating quest routes use the configured model', async () => {

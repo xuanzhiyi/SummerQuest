@@ -5,6 +5,7 @@ import { todayDate } from '@/lib/calendar'
 import { generateText } from '@/lib/ai/client'
 import { swedishReadingPrompt } from '@/lib/ai/prompts'
 import { getConfiguredAiModel } from '@/lib/ai/settings'
+import { withReadingTopic } from '@/lib/reading-topics'
 
 export async function GET() {
   const session = await auth()
@@ -15,10 +16,10 @@ export async function GET() {
   const userId = parseInt(session.user.id)
   const [settings] = await sql`SELECT current_level FROM track_settings WHERE track = 'swedish' AND child_user_id = ${userId}`
   const level = settings?.current_level ?? 5
-  const aiModel = await getConfiguredAiModel()
 
   try {
-    const text = await generateText(swedishReadingPrompt(level), aiModel)
+    const aiModel = await getConfiguredAiModel()
+    const text = await generateText(withReadingTopic(swedishReadingPrompt(level)), aiModel)
     return NextResponse.json({ text, level })
   } catch (e) {
     console.error('AI text generation failed:', e)

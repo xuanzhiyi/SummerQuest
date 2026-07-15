@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import { computeWordPairingResult } from '../../lib/word-pairing-scoring.js'
 import { MIN_WRITING_CHARACTERS, validateWritingLength, writingCharacterCount } from '../../lib/writing-validation.ts'
+import { READING_TOPICS, withReadingTopic } from '../../lib/reading-topics.ts'
 
 const root = new URL('../../', import.meta.url)
 const tests = []
@@ -188,6 +189,16 @@ test('writing UI and APIs use shared 500-character validation', async () => {
     assert.match(route, /validateWritingLength\(paragraph\)/)
     assert.match(route, /character_count: lengthValidation\.count/)
   }
+})
+
+test('reading topic pool feeds one hard-coded topic to the live AI prompt', () => {
+  const prompt = withReadingTopic('Generate a passage.', 'a quiet forest path with an unexpected discovery')
+
+  assert.match(prompt, /Generate a passage\./)
+  assert.match(prompt, /Use this specific topic/)
+  assert.match(prompt, /a quiet forest path with an unexpected discovery/)
+  assert.equal(READING_TOPICS.length, 50)
+  assert.equal(new Set(READING_TOPICS).size, 50)
 })
 
 let failures = 0
