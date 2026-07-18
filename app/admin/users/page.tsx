@@ -8,8 +8,21 @@ export default async function AdminUsersPage() {
   const session = await auth()
   if (!session || session.user.role !== 'admin') redirect('/')
 
-  const users = await sql`SELECT id, name, role FROM users ORDER BY role, name`
-  const links = await sql`SELECT guardian_id, child_id FROM guardian_children`
+  const users = await sql`
+    SELECT users.id, users.name, users.role
+    FROM users
+    JOIN families ON families.id = users.family_id
+    WHERE families.code = ${session.user.familyCode}
+    ORDER BY users.role, users.name
+  `
+  const links = await sql`
+    SELECT guardian_children.guardian_id, guardian_children.child_id
+    FROM guardian_children
+    JOIN users guardians ON guardians.id = guardian_children.guardian_id
+    JOIN users children ON children.id = guardian_children.child_id
+    JOIN families ON families.id = guardians.family_id AND families.id = children.family_id
+    WHERE families.code = ${session.user.familyCode}
+  `
 
   return (
     <div className="hud-page">

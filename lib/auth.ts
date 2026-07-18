@@ -10,14 +10,18 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       credentials: {
         name: { label: 'Name', type: 'text' },
         pin:  { label: 'PIN',  type: 'password' },
+        familyCode: { label: 'Family', type: 'text' },
       },
       async authorize(credentials) {
-        const { name, pin } = credentials as { name?: string; pin?: string }
-        if (!name || !pin) return null
+        const { name, pin, familyCode } = credentials as { name?: string; pin?: string; familyCode?: string }
+        if (!name || !pin || !familyCode) return null
 
         const [user] = await sql`
-          SELECT id, name, role, pin_hash, password_hash
-          FROM users WHERE LOWER(name) = LOWER(${name})
+          SELECT users.id, users.name, users.role, users.pin_hash, users.password_hash, families.code AS family_code
+          FROM users
+          JOIN families ON families.id = users.family_id
+          WHERE LOWER(users.name) = LOWER(${name})
+            AND LOWER(families.code) = LOWER(${familyCode})
         `
         if (!user) return null
 
@@ -37,7 +41,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           childIds = rows.map(r => Number(r.child_id))
         }
 
-        return { id: String(user.id), name: String(user.name), role: String(user.role), childIds }
+        return { id: String(user.id), name: String(user.name), role: String(user.role), familyCode: String(user.family_code), childIds }
       },
     }),
   ],
@@ -46,6 +50,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       if (user) {
         token.role     = (user as { role: string }).role
         token.id       = user.id
+        token.familyCode = (user as { familyCode?: string }).familyCode
         token.childIds = (user as { childIds?: number[] }).childIds ?? []
       }
       return token
@@ -53,6 +58,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     session({ session, token }) {
       session.user.role     = token.role as string
       session.user.id       = token.id as string
+      session.user.familyCode = token.familyCode as string
       session.user.childIds = (token.childIds as number[]) ?? []
       return session
     },
@@ -68,6 +74,7 @@ declare module 'next-auth' {
       name?: string | null
       email?: string | null
       role: string
+      familyCode: string
       childIds: number[]
     }
   }

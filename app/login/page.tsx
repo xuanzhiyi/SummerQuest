@@ -19,6 +19,7 @@ const ROLE_LABEL: Record<PublicUser['role'], string> = {
 
 const ACCENT = '#4FD1FF'
 const ACCENT_SOFT = '#A6E9FF'
+const FAMILY_STORAGE_KEY = 'summerquest.familyCode'
 
 function initials(name: string) {
   return name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()
@@ -27,14 +28,74 @@ function initials(name: string) {
 export default function LoginPage() {
   const router = useRouter()
   const [users, setUsers] = useState<PublicUser[]>([])
+  const [familyCode, setFamilyCode] = useState('')
+  const [familyName, setFamilyName] = useState('')
+  const [familyInput, setFamilyInput] = useState('')
+  const [familyLoading, setFamilyLoading] = useState(true)
   const [selected, setSelected] = useState<PublicUser | null>(null)
   const [pin, setPin] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
-    fetch('/api/users').then(r => r.json()).then(d => setUsers(d.users ?? []))
+    const stored = window.localStorage.getItem(FAMILY_STORAGE_KEY) ?? ''
+    if (!stored) {
+      setFamilyLoading(false)
+      return
+    }
+
+    fetch(`/api/families?code=${encodeURIComponent(stored)}`)
+      .then(r => r.json())
+      .then(d => {
+        if (d.family?.code) {
+          setFamilyCode(d.family.code)
+          setFamilyName(d.family.name ?? d.family.code)
+          setFamilyInput(d.family.code)
+        } else {
+          window.localStorage.removeItem(FAMILY_STORAGE_KEY)
+        }
+      })
+      .finally(() => setFamilyLoading(false))
   }, [])
+
+  useEffect(() => {
+    if (!familyCode) return
+    fetch(`/api/users?family=${encodeURIComponent(familyCode)}`)
+      .then(r => r.json())
+      .then(d => setUsers(d.users ?? []))
+  }, [familyCode])
+
+  async function saveFamily(e: React.FormEvent) {
+    e.preventDefault()
+    const code = familyInput.trim()
+    if (!code) return
+    setError('')
+    setFamilyLoading(true)
+    const res = await fetch(`/api/families?code=${encodeURIComponent(code)}`)
+    const data = await res.json()
+    setFamilyLoading(false)
+    if (!res.ok || !data.family?.code) {
+      setError(data.error ?? 'Family not found.')
+      return
+    }
+    window.localStorage.setItem(FAMILY_STORAGE_KEY, data.family.code)
+    setFamilyCode(data.family.code)
+    setFamilyName(data.family.name ?? data.family.code)
+    setSelected(null)
+    setPin('')
+    setUsers([])
+  }
+
+  function changeFamily() {
+    window.localStorage.removeItem(FAMILY_STORAGE_KEY)
+    setFamilyCode('')
+    setFamilyName('')
+    setFamilyInput('')
+    setSelected(null)
+    setUsers([])
+    setPin('')
+    setError('')
+  }
 
   const doSignIn = useCallback(async (pinValue: string) => {
     if (!selected) return
@@ -43,6 +104,7 @@ export default function LoginPage() {
     const res = await signIn('credentials', {
       name: selected.name,
       pin: pinValue,
+      familyCode,
       redirect: false,
     })
     setLoading(false)
@@ -73,6 +135,14 @@ export default function LoginPage() {
     admin: users.filter(u => u.role === 'admin'),
   }
 
+  if (familyLoading) {
+    return (
+      <div className="hud-page flex flex-col items-center justify-center px-5">
+        <p style={{ color: ACCENT, fontSize: 13, fontWeight: 700 }}>Loading...</p>
+      </div>
+    )
+  }
+
   return (
     <div className="hud-page flex flex-col items-center px-5" style={{ paddingTop: 56, paddingBottom: 32 }}>
       <div className="flex flex-col items-center" style={{ marginBottom: 28 }}>
@@ -95,11 +165,50 @@ export default function LoginPage() {
       </div>
 
       <div className="hud-card w-full max-w-sm" style={{ borderRadius: 24, padding: '24px 20px' }}>
-        {!selected ? (
+        {!familyCode ? (
+          <form onSubmit={saveFamily} className="space-y-4">
+            <div>
+              <p style={{ fontSize: 11, fontWeight: 700, color: '#6B7793', textTransform: 'uppercase', letterSpacing: 2, margin: '0 0 10px' }}>
+                Family code
+              </p>
+              <p style={{ fontSize: 13, color: '#9AA4C0', lineHeight: 1.5, margin: '0 0 14px' }}>
+                Enter this once on this device. Next time, you will go straight to the normal login page.
+              </p>
+              <input
+                value={familyInput}
+                onChange={(e) => setFamilyInput(e.target.value)}
+                autoFocus
+                placeholder="e.g. summerquest"
+                className="w-full border border-[rgba(255,255,255,0.12)] bg-[#1A2136] rounded-lg px-3 py-3 text-sm text-[#EDEFF5] placeholder:text-[#6B7793] focus:outline-none focus:ring-2 focus:ring-cyan-300"
+              />
+            </div>
+            {error && <p style={{ color: '#FF5C7A', fontSize: 12, fontWeight: 700, textAlign: 'center', margin: 0 }}>{error}</p>}
+            <button
+              type="submit"
+              disabled={!familyInput.trim() || familyLoading}
+              className="w-full rounded-lg py-3 text-sm font-bold disabled:opacity-50"
+              style={{ background: `linear-gradient(135deg, ${ACCENT}, ${ACCENT_SOFT})`, color: '#0A0E17' }}
+            >
+              Continue
+            </button>
+          </form>
+        ) : !selected ? (
           <>
-            <p style={{ fontSize: 11, fontWeight: 700, color: '#6B7793', textTransform: 'uppercase', letterSpacing: 2, margin: '0 0 16px' }}>
-              Who are you?
-            </p>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 16 }}>
+              <div>
+                <p style={{ fontSize: 11, fontWeight: 700, color: '#6B7793', textTransform: 'uppercase', letterSpacing: 2, margin: '0 0 4px' }}>
+                  Who are you?
+                </p>
+                <p style={{ fontSize: 11, color: '#4FD1FF', fontWeight: 700, margin: 0 }}>{familyName}</p>
+              </div>
+              <button
+                type="button"
+                onClick={changeFamily}
+                style={{ background: '#12182A', color: '#9AA4C0', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 999, padding: '7px 10px', fontSize: 10, fontWeight: 800, cursor: 'pointer' }}
+              >
+                Change
+              </button>
+            </div>
             {(['child', 'guardian', 'admin'] as const).map(role => {
               const group = grouped[role]
               if (group.length === 0) return null

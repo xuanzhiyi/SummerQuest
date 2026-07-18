@@ -154,6 +154,31 @@ test('quest metadata is centralized for key UI and reward paths', async () => {
   assert.doesNotMatch(rewardRequest, /const tableByTrack/)
 })
 
+test('login is scoped by remembered family code', async () => {
+  const login = await source('app/login/page.tsx')
+  const usersRoute = await source('app/api/users/route.ts')
+  const familiesRoute = await source('app/api/families/route.ts')
+  const auth = await source('lib/auth.ts')
+  const adminUsersRoute = await source('app/api/admin/users/route.ts')
+  const adminUsersPage = await source('app/admin/users/page.tsx')
+  const migration = await source('db/migrate_010.ts')
+
+  assert.match(login, /summerquest\.familyCode/)
+  assert.match(login, /localStorage\.setItem\(FAMILY_STORAGE_KEY/)
+  assert.match(login, /fetch\(`\/api\/users\?family=/)
+  assert.match(login, /familyCode,\s*\n\s*redirect: false/)
+  assert.match(usersRoute, /Missing family code/)
+  assert.match(usersRoute, /JOIN families ON families\.id = users\.family_id/)
+  assert.match(familiesRoute, /Family not found/)
+  assert.match(auth, /familyCode/)
+  assert.match(auth, /LOWER\(families\.code\) = LOWER\(\$\{familyCode\}\)/)
+  assert.match(adminUsersRoute, /session\.user\.familyCode/)
+  assert.match(adminUsersRoute, /INSERT INTO users \(name, role, pin_hash, family_id\)/)
+  assert.match(adminUsersPage, /session\.user\.familyCode/)
+  assert.match(migration, /CREATE TABLE IF NOT EXISTS families/)
+  assert.match(migration, /ALTER TABLE users ADD COLUMN IF NOT EXISTS family_id/)
+})
+
 let failures = 0
 for (const { name, fn } of tests) {
   try {
