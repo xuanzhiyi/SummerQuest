@@ -1,4 +1,4 @@
-export const MIN_WRITING_CHARACTERS = 500
+export const MIN_WRITING_CHARACTERS = 1000
 
 export function writingCharacterCount(text: string): number {
   return text.trim().length
