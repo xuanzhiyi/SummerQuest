@@ -16,6 +16,12 @@ export interface PreviousWritingEntry {
   ai_score?: number | string | null
 }
 
+export interface PreviousDiaryEntry {
+  date: string
+  language: string
+  entry_text: string
+}
+
 function previousWritingContext(previousEntries: PreviousWritingEntry[]): string {
   if (previousEntries.length === 0) {
     return 'No previous writing entries are available for comparison.'
@@ -28,6 +34,29 @@ Prompt: "${entry.prompt_used ?? 'No prompt saved'}"
 Paragraph:
 "${entry.paragraph}"${score}`
   }).join('\n\n')
+}
+
+function previousDiaryContext(previousEntries: PreviousDiaryEntry[]): string {
+  if (previousEntries.length === 0) {
+    return 'No previous diary entries are available for comparison.'
+  }
+
+  return previousEntries.map((entry, index) => `Previous diary ${index + 1} (${entry.date}, ${entry.language}):
+"${entry.entry_text}"`).join('\n\n')
+}
+
+export function diaryFeedbackPrompt(entryText: string, language: string, previousEntries: PreviousDiaryEntry[] = []): string {
+  return `You are a warm, thoughtful diary-reading mentor for a 13-year-old boy. Read the current diary entry carefully and respond in the same language as the diary when possible. If the diary mixes languages or the language is "other", use simple English.
+
+Here are up to three previous diary entries from the same learner, oldest to newest:
+${previousDiaryContext(previousEntries)}
+
+Current diary language: ${language}
+
+Current diary:
+"${entryText}"
+
+Write a supportive diary review, not a grade. Mention 1-2 concrete things you noticed in today's diary, ask one gentle follow-up question, and if previous entries are available, connect today's entry to a past mood, interest, habit, or progress pattern. Keep it age-appropriate, kind, and specific. Do not mention scores. Keep the review to 3-5 sentences. Return only the review.`
 }
 
 export function englishFeedbackPrompt(paragraph: string, prompt: string, level: number, previousEntries: PreviousWritingEntry[] = []): string {

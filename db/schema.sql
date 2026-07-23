@@ -167,6 +167,19 @@ CREATE TABLE IF NOT EXISTS entries_sport (
   updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- Diary entries
+CREATE TABLE IF NOT EXISTS entries_diary (
+  id              SERIAL PRIMARY KEY,
+  user_id         INT NOT NULL REFERENCES users(id),
+  date            DATE NOT NULL,
+  language        TEXT NOT NULL DEFAULT 'other',
+  entry_text      TEXT NOT NULL,
+  ai_feedback     TEXT,             -- reflective AI review connected to previous diary entries
+  points_awarded  INT NOT NULL DEFAULT 10,
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 -- Seed default track settings
 INSERT INTO track_settings (track, current_level, effort_weight, points_per_entry) VALUES
   ('books',      5, 1.0, 10),

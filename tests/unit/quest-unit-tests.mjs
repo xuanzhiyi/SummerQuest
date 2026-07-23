@@ -165,18 +165,17 @@ test('writing prompts use a 100-topic pool instead of the old repeated prompts',
   assert.doesNotMatch(prompts, /export const FINNISH_WRITING_PROMPTS = \[/)
 })
 
-test('writing validation enforces a 500-character minimum consistently', () => {
-  assert.equal(MIN_WRITING_CHARACTERS, 500)
-  assert.equal(writingCharacterCount(`  ${'a'.repeat(500)}  `), 500)
-  assert.deepEqual(validateWritingLength('a'.repeat(500)), { ok: true, count: 500 })
+test('writing validation enforces the configured character minimum consistently', () => {
+  assert.equal(writingCharacterCount(`  ${'a'.repeat(MIN_WRITING_CHARACTERS)}  `), MIN_WRITING_CHARACTERS)
+  assert.deepEqual(validateWritingLength('a'.repeat(MIN_WRITING_CHARACTERS)), { ok: true, count: MIN_WRITING_CHARACTERS })
 
-  const short = validateWritingLength('a'.repeat(499))
+  const short = validateWritingLength('a'.repeat(MIN_WRITING_CHARACTERS - 1))
   assert.equal(short.ok, false)
-  assert.equal(short.count, 499)
-  assert.match(short.error, /at least 500 characters/)
+  assert.equal(short.count, MIN_WRITING_CHARACTERS - 1)
+  assert.match(short.error, new RegExp(`at least ${MIN_WRITING_CHARACTERS} characters`))
 })
 
-test('writing UI and APIs use shared 500-character validation', async () => {
+test('writing UI and APIs use shared character-length validation', async () => {
   const form = await source('components/tracks/WritingForm.tsx')
   const englishRoute = await source('app/api/entries/english/route.ts')
   const finnishRoute = await source('app/api/entries/finnish/route.ts')
@@ -199,6 +198,21 @@ test('reading topic pool feeds one hard-coded topic to the live AI prompt', () =
   assert.match(prompt, /a quiet forest path with an unexpected discovery/)
   assert.equal(READING_TOPICS.length, 50)
   assert.equal(new Set(READING_TOPICS).size, 50)
+})
+
+test('diary feedback prompt includes current diary and previous diary context without scoring', async () => {
+  const prompts = await source('lib/ai/prompts.ts')
+  const promptBlock = prompts.slice(
+    prompts.indexOf('export function diaryFeedbackPrompt'),
+    prompts.indexOf('export function englishFeedbackPrompt'),
+  )
+
+  assert.match(promptBlock, /export function diaryFeedbackPrompt/)
+  assert.match(promptBlock, /previousDiaryContext\(previousEntries\)/)
+  assert.match(promptBlock, /Current diary language/)
+  assert.match(promptBlock, /Current diary:/)
+  assert.match(promptBlock, /connect today's entry to a past mood, interest, habit, or progress pattern/)
+  assert.doesNotMatch(promptBlock, /SCORE:/)
 })
 
 let failures = 0

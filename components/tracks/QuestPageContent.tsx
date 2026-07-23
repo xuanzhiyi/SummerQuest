@@ -240,6 +240,12 @@ function EntryCard({ track, entry, showScores }: { track: string; entry: Record<
         <div className="bg-white rounded-xl p-4 shadow-sm text-sm space-y-2">
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide">{String(entry.language)}</p>
           <p className="text-gray-800 whitespace-pre-wrap leading-relaxed">{String(entry.entry_text)}</p>
+          {!!entry.ai_feedback && (
+            <div className="bg-green-50 rounded-lg p-3">
+              <p className="text-xs font-semibold text-green-700 mb-1">Diary review</p>
+              <p className="text-gray-700 whitespace-pre-wrap">{String(entry.ai_feedback)}</p>
+            </div>
+          )}
           <PointsBadge points={entry.points_awarded as number} />
         </div>
       )

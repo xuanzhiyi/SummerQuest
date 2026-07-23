@@ -21,6 +21,7 @@ export default function DiaryForm({ date, onSaved }: Props) {
   const [text, setText] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [feedback, setFeedback] = useState<string | null>(null)
 
   const wordCount = text.trim().split(/\s+/).filter(Boolean).length
 
@@ -36,6 +37,7 @@ export default function DiaryForm({ date, onSaved }: Props) {
     const data = await res.json()
     setLoading(false)
     if (!res.ok) { setError(data.error ?? 'Something went wrong'); return }
+    setFeedback(data.entry.ai_feedback ?? null)
     onSaved(data.entry, data.points_awarded)
   }
 
@@ -89,6 +91,13 @@ export default function DiaryForm({ date, onSaved }: Props) {
       </div>
 
       {error && <p className="text-red-500 text-xs">{error}</p>}
+
+      {feedback && (
+        <div className="bg-green-50 rounded-xl p-4 text-sm">
+          <p className="text-xs font-semibold text-green-700 mb-1">Diary review</p>
+          <p className="text-gray-700 whitespace-pre-wrap">{feedback}</p>
+        </div>
+      )}
 
       <button
         type="submit"

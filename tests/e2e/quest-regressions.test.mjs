@@ -114,6 +114,7 @@ test('AI-generating quest routes use the configured model', async () => {
   const routes = [
     'app/api/entries/books/route.ts',
     'app/api/entries/chinese/route.ts',
+    'app/api/entries/diary/route.ts',
     'app/api/entries/english-reading/route.ts',
     'app/api/entries/english/route.ts',
     'app/api/entries/finnish-reading/route.ts',
@@ -133,6 +134,26 @@ test('AI-generating quest routes use the configured model', async () => {
       assert.match(line, /generateText\(.+,\s*(aiModel|await getConfiguredAiModel\(\))\)/)
     }
   }
+})
+
+test('diary entries receive AI review using previous same-child diary context', async () => {
+  const route = await source('app/api/entries/diary/route.ts')
+  const content = await source('components/tracks/QuestPageContent.tsx')
+  const form = await source('components/tracks/DiaryForm.tsx')
+  const migration = await source('db/migrate_011.ts')
+  const schema = await source('db/schema.sql')
+
+  assert.match(route, /diaryFeedbackPrompt/)
+  assert.match(route, /getConfiguredAiModel/)
+  assert.match(route, /generateText\(diaryFeedbackPrompt\(entry_text,\s*language \?\? 'other',\s*previousEntries\),\s*aiModel\)/)
+  assert.match(route, /WHERE user_id = \$\{userId\} AND date < \$\{date\}/)
+  assert.match(route, /LIMIT 3/)
+  assert.match(route, /UPDATE entries_diary SET ai_feedback = \$\{ai_feedback\}/)
+  assert.match(content, /case 'diary':[\s\S]*Diary review/)
+  assert.match(form, /setFeedback\(data\.entry\.ai_feedback \?\? null\)/)
+  assert.match(migration, /ALTER TABLE entries_diary ADD COLUMN IF NOT EXISTS ai_feedback TEXT/)
+  assert.match(schema, /CREATE TABLE IF NOT EXISTS entries_diary/)
+  assert.match(schema, /ai_feedback\s+TEXT/)
 })
 
 test('quest metadata is centralized for key UI and reward paths', async () => {
