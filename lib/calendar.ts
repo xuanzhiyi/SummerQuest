@@ -28,6 +28,15 @@ export function isPast(date: string): boolean {
   return date < todayDate()
 }
 
+// Whether `date` is today or within the past `days` days (inclusive) — used for
+// tracks that allow a short backdated editing window (e.g. diary).
+export function isWithinEditWindow(date: string, days: number): boolean {
+  const diffDays = Math.round(
+    (new Date(todayDate() + 'T00:00:00Z').getTime() - new Date(date + 'T00:00:00Z').getTime()) / 86400000
+  )
+  return diffDays >= 0 && diffDays <= days
+}
+
 // Load daily point totals and effort signals for all program days
 export async function getCalendarTiles(userId: number): Promise<DayTile[]> {
   const pointsRows = await sql`

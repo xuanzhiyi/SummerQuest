@@ -33,6 +33,7 @@ export interface QuestDefinition {
   hasDailyTarget?: boolean
   hasPointCap?: boolean
   wordPairing?: boolean
+  editWindowDays?: number
 }
 
 export const QUEST_DEFINITIONS: QuestDefinition[] = [
@@ -53,7 +54,7 @@ export const QUEST_DEFINITIONS: QuestDefinition[] = [
   { track: 'finnish-reading', settingsTrack: 'finnish_reading', table: 'entries_finnish_reading', code: 'FI-R', label: 'Finnish Reading', title: 'Finnish Reading', category: 'Mind', hasLevel: true },
   { track: 'science', settingsTrack: 'science', table: 'entries_science', code: 'SCI', label: 'Science', title: 'Science', category: 'Mind', hasLevel: true, aiGraded: true },
   { track: 'ai_project', settingsTrack: 'ai_project', table: 'entries_ai_project', code: 'AI', label: 'AI Project', title: 'AI Project', category: 'Mind' },
-  { track: 'diary', settingsTrack: 'diary', table: 'entries_diary', code: 'DY', label: 'Diary', title: 'Diary', category: 'Mind' },
+  { track: 'diary', settingsTrack: 'diary', table: 'entries_diary', code: 'DY', label: 'Diary', title: 'Diary', category: 'Mind', editWindowDays: 4 },
 ]
 
 export const TOTAL_QUESTS = QUEST_DEFINITIONS.length

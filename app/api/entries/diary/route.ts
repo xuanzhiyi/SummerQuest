@@ -1,7 +1,8 @@
 ﻿import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 import sql from '@/lib/db'
-import { todayDate } from '@/lib/calendar'
+import { isWithinEditWindow } from '@/lib/calendar'
+import { getQuestByTrack } from '@/lib/tracks'
 import { generateText } from '@/lib/ai/client'
 import { diaryFeedbackPrompt } from '@/lib/ai/prompts'
 import { getConfiguredAiModel } from '@/lib/ai/settings'
@@ -19,8 +20,9 @@ export async function POST(req: NextRequest) {
 
   const userId = parseInt(session.user.id)
 
-  if (session.user.role === 'child' && date !== todayDate()) {
-    return NextResponse.json({ error: 'Can only log today' }, { status: 403 })
+  const editWindowDays = getQuestByTrack('diary')?.editWindowDays ?? 0
+  if (session.user.role === 'child' && !isWithinEditWindow(date, editWindowDays)) {
+    return NextResponse.json({ error: `Can only log diary entries from the past ${editWindowDays} days` }, { status: 403 })
   }
 
   const [settings] = await sql`SELECT points_per_entry FROM track_settings WHERE track = 'diary' AND child_user_id = ${userId}`

@@ -1,6 +1,7 @@
 import { redirect, notFound } from 'next/navigation'
 import { auth } from '@/lib/auth'
-import { isToday, PROGRAM_START, PROGRAM_END, todayDate } from '@/lib/calendar'
+import { isToday, isWithinEditWindow, PROGRAM_START, PROGRAM_END, todayDate } from '@/lib/calendar'
+import { getQuestByTrack } from '@/lib/tracks'
 import sql from '@/lib/db'
 import Link from 'next/link'
 import NavBar from '@/components/ui/NavBar'
@@ -43,7 +44,8 @@ export default async function QuestPage({ params }: Props) {
   const role = session.user.role
   if (role === 'child' && date > todayDate()) redirect('/')
 
-  const canEdit = role === 'admin' || (role === 'child' && isToday(date))
+  const editWindowDays = getQuestByTrack(track)?.editWindowDays ?? 0
+  const canEdit = role === 'admin' || (role === 'child' && (isToday(date) || isWithinEditWindow(date, editWindowDays)))
 
   let userId = parseInt(session.user.id)
   if (role === 'guardian') {
