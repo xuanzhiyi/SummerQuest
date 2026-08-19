@@ -2,22 +2,32 @@ import sql from './db'
 import { scoreToEffortSignal, type DayTile, type EffortSignal, TOTAL_QUESTS } from '@/types'
 
 export const PROGRAM_START = '2026-06-26'
-export const PROGRAM_END = '2026-08-12'
+
+// No fixed end date — the program runs indefinitely. The calendar (and the
+// range of dates it's willing to generate tiles for) keeps rolling forward a
+// fixed buffer past today rather than stopping at a hardcoded date.
+const CALENDAR_FUTURE_BUFFER_DAYS = 45
+
+// Local "today" in Europe/Helsinki — avoids UTC date drift near midnight for CEST/EEST users
+export function todayDate(): string {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Helsinki' }).format(new Date())
+}
+
+export function calendarEndDate(): string {
+  const d = new Date(todayDate() + 'T00:00:00Z')
+  d.setUTCDate(d.getUTCDate() + CALENDAR_FUTURE_BUFFER_DAYS)
+  return d.toISOString().slice(0, 10)
+}
 
 export function programDates(): string[] {
   const dates: string[] = []
   const cur = new Date(PROGRAM_START)
-  const end = new Date(PROGRAM_END)
+  const end = new Date(calendarEndDate())
   while (cur <= end) {
     dates.push(cur.toISOString().slice(0, 10))
     cur.setDate(cur.getDate() + 1)
   }
   return dates
-}
-
-// Local "today" in Europe/Helsinki — avoids UTC date drift near midnight for CEST/EEST users
-export function todayDate(): string {
-  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Helsinki' }).format(new Date())
 }
 
 export function isToday(date: string): boolean {
