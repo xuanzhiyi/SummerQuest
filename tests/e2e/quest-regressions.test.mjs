@@ -84,10 +84,54 @@ test('reading exercise difficulty levels come from track_settings', async () => 
 
   for (const [path, track] of routes) {
     const route = await source(path)
-    assert.match(route, new RegExp(`current_level FROM track_settings WHERE track = '${track}'`))
+    assert.match(route, new RegExp(`current_level FROM track_settings\\s+WHERE track = '${track}'`))
     assert.match(route, /const level = settings\?\.current_level \?\? 5/)
-    assert.match(route, /generateText\(withReadingTopic\([^,\n]+\(level\)\),\s*aiModel\)/)
+    if (track === 'finnish_reading') {
+      assert.match(route, /finnishReadingPrompt\(level\)/)
+    } else {
+      assert.match(route, /generateText\(withReadingTopic\([^\n]+\(level\)[^\n]*aiModel\)/)
+    }
   }
+})
+
+test('Finnish fluency saves a daily passage and three user-scoped reading attempts', async () => {
+  const route = await source('app/api/entries/finnish-reading/route.ts')
+  const form = await source('components/tracks/ReadingForm.tsx')
+  const content = await source('components/tracks/QuestPageContent.tsx')
+  const migration = await source('db/migrate_012.ts')
+  const schema = await source('db/schema.sql')
+  const calendar = await source('lib/calendar.ts')
+
+  assert.match(route, /WHERE user_id = \$\{userId\} AND date = \$\{date\}/)
+  assert.match(route, /INSERT INTO entries_finnish_reading[\s\S]*topic_used, done, points_awarded/)
+  assert.match(route, /ON CONFLICT \(user_id, date\) WHERE done = false DO NOTHING/)
+  assert.match(route, /createFluencyAttempt\(String\(draft\.ai_generated_text\), duration_seconds, errors\)/)
+  assert.match(route, /fluency_attempts = fluency_attempts \|\|/)
+  assert.match(route, /jsonb_array_length\(fluency_attempts\) = \$\{attempt_number - 1\}/)
+  assert.match(route, /jsonb_array_length\(fluency_attempts\) = \$\{REQUIRED_FLUENCY_ATTEMPTS\}/)
+  assert.match(route, /practice_minutes < 15/)
+  assert.match(route, /LIMIT 5/)
+  assert.match(form, /startedAtRef\.current = Date\.now\(\)/)
+  assert.match(form, /Start full-passage read/)
+  assert.match(form, /Misread or skipped words/)
+  assert.match(form, /Total reading time today \(minutes\)/)
+  assert.match(content, /FinnishReadingEntryCard/)
+  assert.match(calendar, /FROM entries_finnish_reading WHERE user_id = \$\{userId\} AND done = true/)
+  assert.match(migration, /ADD COLUMN IF NOT EXISTS fluency_attempts JSONB/)
+  assert.match(migration, /ADD COLUMN IF NOT EXISTS topic_used TEXT/)
+  assert.match(migration, /ADD COLUMN IF NOT EXISTS practice_minutes SMALLINT/)
+  assert.match(migration, /CREATE UNIQUE INDEX IF NOT EXISTS idx_finnish_reading_open_session/)
+  assert.match(schema, /fluency_attempts\s+JSONB NOT NULL DEFAULT '\[\]'::jsonb/)
+})
+
+test('Finnish writing route uses targeted feedback without score parsing', async () => {
+  const route = await source('app/api/entries/finnish/route.ts')
+  const prompts = await source('lib/ai/prompts.ts')
+
+  assert.match(route, /finnishFeedbackPrompt\(paragraph, prompt_used \?\? '', level, previousEntries\)/)
+  assert.doesNotMatch(route, /extractScore/)
+  assert.match(prompts, /corrected version and a simple explanation/)
+  assert.match(prompts, /Do not rewrite the whole paragraph, give a grade, or output a score/)
 })
 
 test('reading routes send a hard-coded random topic to live AI generation', async () => {

@@ -2,6 +2,34 @@
 
 import { useState, useEffect, useRef } from 'react'
 import RubyText from '@/components/ui/RubyText'
+import { countReadingWords } from '@/lib/finnish-fluency'
+
+interface FluencyAttempt {
+  duration_seconds: number
+  errors: number
+  correct_words_per_minute: number
+}
+
+interface FluencyHistorySession {
+  date: string
+  fluency_attempts: FluencyAttempt[]
+  practice_minutes: number
+}
+
+const finnishPracticeRequests = new Map<string, Promise<Record<string, unknown>>>()
+
+function loadFinnishPractice(date: string) {
+  const existing = finnishPracticeRequests.get(date)
+  if (existing) return existing
+
+  const request = fetch(`/api/entries/finnish-reading?date=${encodeURIComponent(date)}`)
+    .then((res) => res.json())
+    .finally(() => {
+      if (finnishPracticeRequests.get(date) === request) finnishPracticeRequests.delete(date)
+    })
+  finnishPracticeRequests.set(date, request)
+  return request
+}
 
 interface Props {
   date: string
@@ -11,6 +39,9 @@ interface Props {
   initialLevel?: number
   savedAudioKey?: string | null
   savedEntryId?: number | null  // when set, PATCH the existing entry instead of POSTing a new one
+  draftEntryId?: number | null
+  initialAttempts?: FluencyAttempt[]
+  initialHistory?: FluencyHistorySession[]
 }
 
 type Stage = 'loading' | 'ready' | 'recording' | 'uploading' | 'done'
@@ -27,10 +58,13 @@ function formatSize(bytes: number) {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
 }
 
-export default function ReadingForm({ date, track, onSaved, initialText, initialLevel, savedAudioKey, savedEntryId }: Props) {
+export default function ReadingForm({ date, track, onSaved, initialText, initialLevel, savedAudioKey, savedEntryId, draftEntryId: initialDraftId, initialAttempts, initialHistory }: Props) {
   const [text, setText] = useState<string | null>(initialText ?? null)
   const [level, setLevel] = useState<number>(initialLevel ?? 5)
   const [stage, setStage] = useState<Stage>(initialText ? 'ready' : 'loading')
+  const [draftId, setDraftId] = useState<number | null>(initialDraftId ?? null)
+  const [fluencyAttempts, setFluencyAttempts] = useState<FluencyAttempt[]>(initialAttempts ?? [])
+  const [fluencyHistory, setFluencyHistory] = useState<FluencyHistorySession[]>(initialHistory ?? [])
   // Track the R2 key of the most recently saved recording so we can delete it
   const savedKeyRef = useRef<string | null>(savedAudioKey ?? null)
   const [error, setError] = useState('')
@@ -47,15 +81,26 @@ export default function ReadingForm({ date, track, onSaved, initialText, initial
   const levelRafRef = useRef<number | null>(null)
 
   useEffect(() => {
-    if (initialText) return // already have text — skip fetch
-    fetch(`/api/entries/${track}`)
-      .then(r => r.json())
+    if (initialText && track !== 'finnish-reading') return // Finnish practice also fetches its saved round/history state.
+    const request = track === 'finnish-reading'
+      ? loadFinnishPractice(date)
+      : fetch(`/api/entries/${track}`).then(r => r.json())
+    request
       .then(d => {
-        if (d.text) { setText(d.text); setLevel(d.level); setStage('ready') }
+        if (d.text) {
+          setText(d.text)
+          setLevel(d.level)
+          if (track === 'finnish-reading') {
+            setDraftId(Number(d.draftId))
+            setFluencyAttempts(Array.isArray(d.attempts) ? d.attempts : [])
+            setFluencyHistory(Array.isArray(d.history) ? d.history : [])
+          }
+          setStage('ready')
+        }
         else setError(d.error ?? 'Could not load reading text')
       })
       .catch(() => setError('Could not load reading text'))
-  }, [track, initialText])
+  }, [date, track, initialText])
 
   useEffect(() => () => {
     if (timerRef.current) clearInterval(timerRef.current)
@@ -235,6 +280,25 @@ export default function ReadingForm({ date, track, onSaved, initialText, initial
     setStage('ready')
   }
 
+  if (track === 'finnish-reading') {
+    if (stage === 'loading') {
+      return <p className="pt-3 text-sm text-gray-400 animate-pulse">Preparing today&apos;s Finnish passage…</p>
+    }
+    if (error && !text) return <p className="pt-3 text-sm text-red-500">{error}</p>
+    if (!text || draftId == null) return <p className="pt-3 text-sm text-red-500">Could not open today&apos;s reading practice.</p>
+    return (
+      <FinnishFluencyPractice
+        date={date}
+        text={text}
+        level={level}
+        draftId={draftId}
+        initialAttempts={fluencyAttempts}
+        history={fluencyHistory}
+        onSaved={onSaved}
+      />
+    )
+  }
+
   if (stage === 'loading') {
     return <p className="pt-3 text-sm text-gray-400 animate-pulse">Loading reading text…</p>
   }
@@ -337,6 +401,217 @@ export default function ReadingForm({ date, track, onSaved, initialText, initial
           </button>
         </div>
       )}
+    </div>
+  )
+}
+
+function FinnishFluencyPractice({
+  date, text, level, draftId, initialAttempts, history, onSaved,
+}: {
+  date: string
+  text: string
+  level: number
+  draftId: number
+  initialAttempts: FluencyAttempt[]
+  history: FluencyHistorySession[]
+  onSaved: (entry: unknown, points: number) => void
+}) {
+  const [attempts, setAttempts] = useState(initialAttempts)
+  const [errorInput, setErrorInput] = useState('')
+  const [elapsedSeconds, setElapsedSeconds] = useState(0)
+  const [durationSeconds, setDurationSeconds] = useState<number | null>(null)
+  const [practiceMinutes, setPracticeMinutes] = useState('')
+  const [timing, setTiming] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
+  const startedAtRef = useRef<number | null>(null)
+  const nextAttempt = attempts.length + 1
+  const passageWordCount = countReadingWords(text)
+
+  useEffect(() => {
+    if (!timing) return
+    const tick = () => {
+      if (startedAtRef.current == null) return
+      setElapsedSeconds(Math.floor((Date.now() - startedAtRef.current) / 1000))
+    }
+    const timer = window.setInterval(tick, 250)
+    tick()
+    return () => window.clearInterval(timer)
+  }, [timing])
+
+  function startAttempt() {
+    setError('')
+    setErrorInput('')
+    setElapsedSeconds(0)
+    setDurationSeconds(null)
+    startedAtRef.current = Date.now()
+    setTiming(true)
+  }
+
+  function stopAttempt() {
+    if (startedAtRef.current == null) return
+    setDurationSeconds(Math.max(1, Math.floor((Date.now() - startedAtRef.current) / 1000)))
+    setTiming(false)
+  }
+
+  async function finishSession() {
+    setSaving(true)
+    setError('')
+    try {
+      const res = await fetch('/api/entries/finnish-reading', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: draftId, date, practice_minutes: Number(practiceMinutes) }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? 'Could not save reading practice')
+      onSaved(data.entry, data.points_awarded)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not save reading practice')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  async function saveAttempt() {
+    const errorCount = Number(errorInput)
+    if (durationSeconds == null || !Number.isInteger(errorCount) || errorCount < 0 || errorCount > passageWordCount) {
+      setError(`Enter a whole number of misread or skipped words from 0 to ${passageWordCount}.`)
+      return
+    }
+
+    setSaving(true)
+    setError('')
+    try {
+      const res = await fetch('/api/entries/finnish-reading', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: draftId,
+          date,
+          attempt_number: nextAttempt,
+          duration_seconds: durationSeconds,
+          errors: errorCount,
+        }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? 'Could not save this reading attempt')
+      const savedAttempts = data.entry.fluency_attempts as FluencyAttempt[]
+      setAttempts(savedAttempts)
+      setErrorInput('')
+      setDurationSeconds(null)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not save this reading attempt')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const formattedDate = (value: string) => new Date(`${value}T12:00:00`).toLocaleDateString('en-GB')
+
+  return (
+    <div className="space-y-4 pt-3">
+      <div className="rounded-xl border border-cyan-400/20 bg-cyan-400/5 p-3 text-sm text-[#C7CEE0]">
+        Aim for 15 minutes of reading each day. Read this whole passage aloud three times and time each complete read. Afterward, keep reading the passage or a book until you reach 15 minutes.
+      </div>
+
+      <div className="rounded-xl bg-white p-4 text-base font-medium text-gray-800">
+        <p className="mb-2 text-xs font-bold uppercase tracking-wide text-cyan-700">Finnish passage · Level {level}/10</p>
+        <div className="whitespace-pre-wrap leading-relaxed">{text}</div>
+      </div>
+
+      {attempts.length < 3 ? (
+        <div className="rounded-xl border border-white/10 bg-[#12182A] p-4 text-center">
+          <p className="text-xs font-bold uppercase tracking-wide text-[#6B7793]">Reading {nextAttempt} of 3</p>
+          <p className="mt-2 text-sm text-[#C7CEE0]">Have an adult time the full read and count any misread or skipped words.</p>
+          {timing ? (
+            <div className="mt-4" aria-live="polite">
+              <p className="font-mono text-5xl font-bold text-cyan-300">{formatDuration(elapsedSeconds)}</p>
+              <p className="mt-1 text-xs text-[#6B7793]">Read the whole passage aloud</p>
+              <button onClick={stopAttempt} disabled={elapsedSeconds < 5} className="mt-4 w-full rounded-lg bg-rose-400 px-4 py-3 font-bold text-[#0A0E17] disabled:opacity-50">
+                I finished reading
+              </button>
+            </div>
+          ) : durationSeconds !== null ? (
+            <div className="mt-4 space-y-3">
+              <p className="text-sm text-[#AAB4CA]">Full read time: {formatDuration(durationSeconds)}</p>
+              <label className="block text-left text-sm font-semibold text-[#EDEFF5]" htmlFor="reading-errors">
+                Misread or skipped words
+              </label>
+              <input
+                id="reading-errors"
+                type="number"
+                min="0"
+                max={passageWordCount}
+                step="1"
+                inputMode="numeric"
+                value={errorInput}
+                onChange={(event) => setErrorInput(event.target.value)}
+                className="w-full rounded-lg border border-white/10 bg-[#1A2136] px-3 py-3 text-lg text-white"
+              />
+              <button onClick={saveAttempt} disabled={saving || errorInput === ''} className="w-full rounded-lg bg-cyan-300 px-4 py-3 font-bold text-[#0A0E17] disabled:opacity-50">
+                {saving ? 'Saving…' : 'Save this read'}
+              </button>
+            </div>
+          ) : (
+            <button onClick={startAttempt} className="mt-4 w-full rounded-lg bg-cyan-300 px-4 py-3 font-bold text-[#0A0E17]">
+              Start full-passage read
+            </button>
+          )}
+        </div>
+      ) : (
+        <div className="rounded-xl border border-lime-300/20 bg-lime-300/5 p-4">
+          <p className="font-bold text-lime-200">Three reads saved</p>
+          <p className="mt-1 text-sm text-[#C7CEE0]">Continue reading until you reach 15 minutes total, then record the time.</p>
+          <label htmlFor="practice-minutes" className="mt-3 block text-sm font-semibold text-[#EDEFF5]">Total reading time today (minutes)</label>
+          <input
+            id="practice-minutes"
+            type="number"
+            min="15"
+            max="120"
+            step="1"
+            inputMode="numeric"
+            value={practiceMinutes}
+            onChange={(event) => setPracticeMinutes(event.target.value)}
+            className="mt-2 w-full rounded-lg border border-white/10 bg-[#1A2136] px-3 py-3 text-lg text-white"
+          />
+          <button onClick={finishSession} disabled={saving || !Number.isInteger(Number(practiceMinutes)) || Number(practiceMinutes) < 15 || Number(practiceMinutes) > 120} className="mt-3 w-full rounded-lg bg-lime-300 px-4 py-3 font-bold text-[#0A0E17] disabled:opacity-50">
+            {saving ? 'Saving…' : 'Finish today’s reading log'}
+          </button>
+        </div>
+      )}
+
+      {attempts.length > 0 && (
+        <div className="space-y-2">
+          <p className="text-xs font-bold uppercase tracking-wide text-[#6B7793]">This session</p>
+          {attempts.map((attempt, index) => (
+            <p key={index} className="flex justify-between rounded-lg bg-[#12182A] px-3 py-2 text-sm text-[#C7CEE0]">
+              <span>Read {index + 1} · {formatDuration(attempt.duration_seconds)} · {attempt.errors} errors</span>
+              <strong className="text-cyan-300">{attempt.correct_words_per_minute} correct words/min</strong>
+            </p>
+          ))}
+        </div>
+      )}
+
+      {history.length > 0 && (
+        <div className="space-y-2">
+          <p className="text-xs font-bold uppercase tracking-wide text-[#6B7793]">Recent reading practice</p>
+          {history.map((item) => {
+            const previousAttempts = item.fluency_attempts ?? []
+            const first = previousAttempts[0]?.correct_words_per_minute
+            const last = previousAttempts.at(-1)?.correct_words_per_minute
+            return (
+              <p key={item.date} className="flex justify-between rounded-lg bg-[#12182A] px-3 py-2 text-sm text-[#C7CEE0]">
+                <span>{formattedDate(item.date)}</span>
+                <strong className="text-cyan-300">{first ?? '—'} → {last ?? '—'} correct words/min · {item.practice_minutes} min</strong>
+              </p>
+            )
+          })}
+          <p className="text-xs text-[#6B7793]">Compare your own readings over time; these are practice results, not school levels.</p>
+        </div>
+      )}
+
+      {error && <p role="alert" className="text-sm font-medium text-red-400">{error}</p>}
     </div>
   )
 }

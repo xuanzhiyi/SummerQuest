@@ -10,7 +10,7 @@ import ProblemSetForm from './ProblemSetForm'
 import AiProjectForm from './AiProjectForm'
 import DiaryForm from './DiaryForm'
 import WordPairingGame from '@/components/game/WordPairingGame'
-import { getRandomWords, PAIR_LABELS } from '@/lib/wordlists'
+import { getRandomWords } from '@/lib/wordlists'
 import type { LanguagePair } from '@/lib/wordlists'
 import MathText from '@/components/ui/MathText'
 import RubyText from '@/components/ui/RubyText'
@@ -29,7 +29,7 @@ export default function QuestPageContent({ track, date, initialEntries, canEdit,
   const [lastResult, setLastResult] = useState<{ score: number; points: number } | null>(null)
   const [reRecording, setReRecording] = useState(false)
 
-  function handleSaved(entry: unknown, points: number) {
+  function handleSaved(entry: unknown) {
     setEntries((prev) => [...prev, entry as Record<string, unknown>])
   }
 
@@ -43,8 +43,6 @@ export default function QuestPageContent({ track, date, initialEntries, canEdit,
   // Word pairing quest
   if (track.startsWith('word_')) {
     const languagePair = track.replace('word_', '') as LanguagePair
-    const labels = PAIR_LABELS[languagePair]
-
     return (
       <div className="space-y-6">
         {lastResult && (
@@ -80,6 +78,22 @@ export default function QuestPageContent({ track, date, initialEntries, canEdit,
   const isReadingTrack = track === 'chinese' || track === 'swedish' || track === 'french' || track === 'english-reading' || track === 'finnish-reading'
   if (hasEntry && isReadingTrack) {
     const latestEntry = entries[entries.length - 1]
+    if (track === 'finnish-reading') {
+      if (latestEntry.done === false) {
+        return (
+          <ReadingForm
+            date={date}
+            track="finnish-reading"
+            onSaved={handleSaved}
+            initialText={latestEntry.ai_generated_text as string}
+            initialLevel={latestEntry.level_at_time as number}
+            draftEntryId={latestEntry.id as number}
+            initialAttempts={(latestEntry.fluency_attempts as { duration_seconds: number; errors: number; correct_words_per_minute: number }[]) ?? []}
+          />
+        )
+      }
+      return <FinnishReadingEntryCard entry={latestEntry} />
+    }
     if (reRecording) {
       return (
         <ReadingForm
@@ -126,6 +140,32 @@ export default function QuestPageContent({ track, date, initialEntries, canEdit,
   }
 
   return <TrackForm track={track} date={date} onSaved={handleSaved} />
+}
+
+function FinnishReadingEntryCard({ entry }: { entry: Record<string, unknown> }) {
+  const attempts = Array.isArray(entry.fluency_attempts)
+    ? entry.fluency_attempts as { duration_seconds: number; errors: number; correct_words_per_minute: number }[]
+    : []
+
+  return (
+    <div className="space-y-4">
+      <div className="rounded-xl bg-white p-4 text-sm text-gray-800">
+        <p className="mb-2 text-xs font-bold uppercase tracking-wide text-cyan-700">Passage reread three times</p>
+        <p className="whitespace-pre-wrap leading-relaxed">{String(entry.ai_generated_text)}</p>
+      </div>
+      <div className="space-y-2">
+        {attempts.map((attempt, index) => (
+          <p key={index} className="flex justify-between rounded-lg bg-[#12182A] px-3 py-2 text-sm text-[#C7CEE0]">
+            <span>Read {index + 1} · {Math.floor(attempt.duration_seconds / 60)}:{String(attempt.duration_seconds % 60).padStart(2, '0')} · {attempt.errors} errors</span>
+            <strong className="text-cyan-300">{attempt.correct_words_per_minute} correct words/min</strong>
+          </p>
+        ))}
+      </div>
+      <p className="text-xs text-[#6B7793]">Keep reading daily for 15 minutes. The recorded numbers help you compare your own practice over time.</p>
+      <p className="text-xs text-[#6B7793]">Time recorded: {Number(entry.practice_minutes) || 0} minutes</p>
+      <PointsBadge points={entry.points_awarded as number} />
+    </div>
+  )
 }
 
 function TrackForm({ track, date, onSaved }: { track: string; date: string; onSaved: (e: unknown, pts: number) => void }) {
@@ -297,19 +337,21 @@ function PointsBadge({ points }: { points: number }) {
 function ReadingEntryCard({
   entry, canEdit, onReRecord, track,
 }: { entry: Record<string, unknown>; canEdit: boolean; onReRecord: () => void; track: string }) {
-  const [audioUrl, setAudioUrl] = useState<string | null>(null)
-  const [loadingAudio, setLoadingAudio] = useState(false)
-
   const audioKey = entry.audio_key as string | null
+  const [audioResult, setAudioResult] = useState<{ key: string; url: string } | null>(null)
+  const [loadedAudioKey, setLoadedAudioKey] = useState<string | null>(null)
+  const audioUrl = audioResult?.key === audioKey ? audioResult.url : null
+  const loadingAudio = Boolean(audioKey && loadedAudioKey !== audioKey)
 
   useEffect(() => {
     if (!audioKey) return
-    setLoadingAudio(true)
+    let active = true
     fetch(`/api/audio-url?key=${encodeURIComponent(audioKey)}`)
       .then(r => r.json())
-      .then(d => { if (d.url) setAudioUrl(d.url) })
+      .then(d => { if (active && d.url) setAudioResult({ key: audioKey, url: d.url }) })
       .catch(() => {})
-      .finally(() => setLoadingAudio(false))
+      .finally(() => { if (active) setLoadedAudioKey(audioKey) })
+    return () => { active = false }
   }, [audioKey])
 
   return (

@@ -3,7 +3,7 @@ import { auth } from '@/lib/auth'
 import sql from '@/lib/db'
 import { todayDate } from '@/lib/calendar'
 import { generateText } from '@/lib/ai/client'
-import { finnishFeedbackPrompt, extractScore } from '@/lib/ai/prompts'
+import { finnishFeedbackPrompt } from '@/lib/ai/prompts'
 import { getConfiguredAiModel } from '@/lib/ai/settings'
 import { validateWritingLength } from '@/lib/writing-validation'
 
@@ -35,12 +35,12 @@ export async function POST(req: NextRequest) {
   const level = trackSettings?.current_level ?? 5
 
   const previousEntries = [...await sql`
-    SELECT date::text AS date, prompt_used, paragraph, ai_score
+    SELECT date::text AS date, prompt_used, paragraph
     FROM entries_finnish
     WHERE user_id = ${userId} AND date < ${date}
     ORDER BY date DESC, created_at DESC
     LIMIT 3
-  `].reverse() as { date: string; prompt_used: string | null; paragraph: string; ai_score: string | number | null }[]
+  `].reverse() as { date: string; prompt_used: string | null; paragraph: string }[]
 
   const [entry] = await sql`
     INSERT INTO entries_finnish (user_id, date, paragraph, prompt_used, points_awarded)
@@ -49,14 +49,11 @@ export async function POST(req: NextRequest) {
   `
 
   let ai_feedback: string | null = null
-  let ai_score: number | null = null
+  const ai_score: number | null = null
   try {
-    const raw = await generateText(finnishFeedbackPrompt(paragraph, prompt_used ?? '', level, previousEntries), aiModel)
-    const parsed = extractScore(raw)
-    ai_feedback = parsed.feedback
-    ai_score = parsed.score
+    ai_feedback = await generateText(finnishFeedbackPrompt(paragraph, prompt_used ?? '', level, previousEntries), aiModel)
     await sql`
-      UPDATE entries_finnish SET ai_feedback = ${ai_feedback}, ai_score = ${ai_score}, updated_at = NOW()
+      UPDATE entries_finnish SET ai_feedback = ${ai_feedback}, ai_score = NULL, updated_at = NOW()
       WHERE id = ${entry.id}
     `
   } catch (e) {

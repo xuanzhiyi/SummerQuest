@@ -14,7 +14,7 @@ The current build still warns that the `middleware` file convention is deprecate
 
 ## Project Goal
 
-SummerQuest is a family learning tracker for Summer 2026. Children complete daily quests, earn XP, receive AI feedback, and request rewards.
+SummerQuest is a family learning app for the 2026-27 school year. Its main focus is Finnish reading fluency and writing. Other quests and rewards remain secondary features.
 
 The current target is a pragmatic `7/10` hobby-project baseline:
 
@@ -52,7 +52,24 @@ Writing feedback:
 
 - English and Finnish writing feedback should use AI analysis, not hard-coded review text.
 - Same-language previous writing history should be included where available.
-- The current plan is to pass the last 3 previous entries plus the current writing to the AI prompt.
+- Finnish feedback uses the last 3 previous entries plus the current writing, identifies exact corrections, and gives one small practice exercise.
+- Finnish writing feedback must not give a score or claim progress without evidence.
+- Writing requires at least 500 characters.
+
+Finnish fluency:
+
+- Support the school's daily 15-minute reading recommendation and repeated oral reading of the same passage.
+- Save one passage per child and date so refreshes resume the same practice without another AI generation.
+- Record three complete rereads in order. The adult enters misread/skipped words and reading duration; the server calculates correct words per minute.
+- Compare personal practice results over time; do not map the school's indicative level to app difficulty or present it as a diagnosis.
+- Avoid recently used topics without sending previous full passages in the AI prompt.
+- Record at least 15 total reading minutes before completing the session.
+- Award the reading quest points only after all three attempts and the 15-minute minimum are recorded.
+
+Quest focus:
+
+- Finnish reading fluency and Finnish writing are the primary school-term practice paths.
+- Word-pairing exercises do not count as Finnish reading-fluency practice.
 
 Word pairing:
 
@@ -85,7 +102,7 @@ npm.cmd run build
 
 Current expected status:
 
-- `npm.cmd test` passes with 9 unit tests and 6 E2E regression tests.
+- `npm.cmd test` passes with 16 unit tests and 11 E2E regression tests.
 - `npm.cmd run typecheck` passes.
 - `npm.cmd run build` passes, with the existing Next.js middleware deprecation warning.
 

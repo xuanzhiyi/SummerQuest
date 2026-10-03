@@ -2,7 +2,9 @@ import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import { computeWordPairingResult } from '../../lib/word-pairing-scoring.js'
 import { MIN_WRITING_CHARACTERS, validateWritingLength, writingCharacterCount } from '../../lib/writing-validation.ts'
-import { READING_TOPICS, withReadingTopic } from '../../lib/reading-topics.ts'
+import { READING_TOPICS, randomReadingTopic, withReadingTopic } from '../../lib/reading-topics.ts'
+import { createFluencyAttempt, isValidFluencyAttempt, isValidFluencyAttempts } from '../../lib/finnish-fluency.ts'
+import { finnishFeedbackPrompt } from '../../lib/ai/prompts.ts'
 
 const root = new URL('../../', import.meta.url)
 const tests = []
@@ -198,6 +200,36 @@ test('reading topic pool feeds one hard-coded topic to the live AI prompt', () =
   assert.match(prompt, /a quiet forest path with an unexpected discovery/)
   assert.equal(READING_TOPICS.length, 50)
   assert.equal(new Set(READING_TOPICS).size, 50)
+  assert.notEqual(randomReadingTopic([READING_TOPICS[0]]), READING_TOPICS[0])
+})
+
+test('Finnish fluency accepts three whole-number attempts and rejects incomplete or invalid scores', () => {
+  const attempt = createFluencyAttempt('one two three four five six', 120, 2)
+  assert.deepEqual(attempt, {
+    duration_seconds: 120,
+    errors: 2,
+    correct_words_per_minute: 2,
+  })
+  assert.equal(isValidFluencyAttempt(attempt), true)
+  assert.equal(isValidFluencyAttempts([
+    { duration_seconds: 120, errors: 3, correct_words_per_minute: 59 },
+    { duration_seconds: 100, errors: 1, correct_words_per_minute: 71 },
+    { duration_seconds: 90, errors: 0, correct_words_per_minute: 80 },
+  ]), true)
+  assert.equal(isValidFluencyAttempts([{ duration_seconds: 120, errors: 3, correct_words_per_minute: 59 }]), false)
+  assert.equal(createFluencyAttempt('one two three', 60, 4), null)
+  assert.equal(createFluencyAttempt('one two three', 4, 0), null)
+  assert.equal(createFluencyAttempt('one two three', 60, 1.5), null)
+})
+
+test('Finnish writing feedback asks for exact corrections and no grade', () => {
+  const prompt = finnishFeedbackPrompt('Minä kävin kaupassa ja ostaa leipää.', 'Kerro päivästäsi.', 3, [
+    { date: '2026-10-01', prompt_used: null, paragraph: 'Eilen minä mennä kouluun.' },
+  ])
+
+  assert.match(prompt, /exact phrases.*corrected version/i)
+  assert.match(prompt, /Compare with previous entries only when the same pattern is clearly present/)
+  assert.doesNotMatch(prompt, /SCORE:/)
 })
 
 test('diary feedback prompt includes current diary and previous diary context without scoring', async () => {

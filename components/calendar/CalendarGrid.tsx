@@ -77,7 +77,7 @@ export default function CalendarGrid({ tiles, role, name, perfectThreshold }: Pr
         </div>
 
         <p style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 12, fontWeight: 700, color: ACCENT, textTransform: 'uppercase', letterSpacing: 3, margin: '0 0 16px' }}>
-          SummerQuest
+          SCHOOL YEAR · FINNISH PRACTICE
         </p>
 
         <div className="flex items-center justify-between">
@@ -88,6 +88,19 @@ export default function CalendarGrid({ tiles, role, name, perfectThreshold }: Pr
           <MonthButton disabled={!canNext} onClick={() => canNext && setActiveMonth(months[monthIdx + 1])} direction="next" />
         </div>
       </header>
+
+      <section aria-label="Finnish reading and writing practice" className="grid grid-cols-1 gap-3 px-4 pb-5 sm:grid-cols-2">
+        <Link href={`/day/${TODAY}/finnish-reading`} className="rounded-2xl border border-cyan-300/20 bg-cyan-300/5 p-4 no-underline transition-colors hover:bg-cyan-300/10">
+          <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-cyan-300">Read aloud</span>
+          <h3 className="mt-1 text-base font-bold text-white">Finnish fluency</h3>
+          <p className="mt-1 text-sm leading-relaxed text-[#AAB4CA]">Reread one passage three times. Aim for 15 minutes of reading each day.</p>
+        </Link>
+        <Link href={`/day/${TODAY}/finnish`} className="rounded-2xl border border-amber-300/20 bg-amber-300/5 p-4 no-underline transition-colors hover:bg-amber-300/10">
+          <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-amber-300">Write and improve</span>
+          <h3 className="mt-1 text-base font-bold text-white">Finnish writing</h3>
+          <p className="mt-1 text-sm leading-relaxed text-[#AAB4CA]">Get specific corrections and one small skill to practice.</p>
+        </Link>
+      </section>
 
       <div style={{ display: 'flex', gap: 10, padding: '0 16px 20px' }}>
         <StatCard flex={1} color="#A3E635" label="Perfect" value={String(perfectDays)} />

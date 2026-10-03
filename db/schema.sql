@@ -114,6 +114,37 @@ CREATE TABLE IF NOT EXISTS entries_french (
   updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- Reading practice entries
+CREATE TABLE IF NOT EXISTS entries_english_reading (
+  id                SERIAL PRIMARY KEY,
+  user_id           INT NOT NULL REFERENCES users(id),
+  date              DATE NOT NULL,
+  ai_generated_text TEXT NOT NULL,
+  level_at_time     INT NOT NULL,
+  done              BOOLEAN NOT NULL DEFAULT TRUE,
+  points_awarded    INT NOT NULL DEFAULT 0,
+  audio_key         TEXT,
+  created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS entries_finnish_reading (
+  id                SERIAL PRIMARY KEY,
+  user_id           INT NOT NULL REFERENCES users(id),
+  date              DATE NOT NULL,
+  ai_generated_text TEXT NOT NULL,
+  level_at_time     INT NOT NULL,
+  done              BOOLEAN NOT NULL DEFAULT TRUE,
+  points_awarded    INT NOT NULL DEFAULT 0,
+  audio_key         TEXT,
+  topic_used        TEXT,
+  fluency_attempts  JSONB NOT NULL DEFAULT '[]'::jsonb,
+  practice_minutes  SMALLINT NOT NULL DEFAULT 0,
+  created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at        TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_finnish_reading_open_session
+  ON entries_finnish_reading (user_id, date) WHERE done = false;
+
 -- Math entries
 CREATE TABLE IF NOT EXISTS entries_math (
   id              SERIAL PRIMARY KEY,

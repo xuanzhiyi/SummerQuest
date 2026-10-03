@@ -1,6 +1,14 @@
 # SummerQuest
 
-SummerQuest is a family learning tracker for Summer 2026. Children complete daily quests, earn XP, get AI feedback on writing/reading/problem-solving exercises, and request rewards when track thresholds are reached.
+SummerQuest is a family learning app for the 2026-27 school year. Its main focus is Finnish literacy: daily oral reading practice with repeated passages and words-correct-per-minute tracking, plus Finnish writing with specific, teachable feedback. Other learning quests and the family reward system remain available around that core.
+
+## School-Term Learning Focus
+
+The school recommends regular reading for 15 minutes a day and repeated oral reading of the same text. Finnish Fluency supports that routine by saving one passage for the day and timing three complete rereads. An adult records misread or skipped words; the server calculates correctly read words per minute from the passage length and elapsed time. The family records the total daily reading minutes before the session is completed, with a 15-minute minimum.
+
+The app compares a learner's own practice results over time. The school's indicative level is not treated as a diagnosis or mapped to the app's 1-10 content setting. Reading scores are entered by the family; AI does not judge pronunciation or fluency.
+
+Finnish writing remains a separate practice. Its current minimum is 500 characters. AI feedback should point to exact phrases, give a simple correction, and suggest one small exercise. It should not give a grade or claim progress without evidence from earlier writing.
 
 ## Current Quality Target
 
@@ -49,8 +57,9 @@ This is the main design-pattern improvement. Adding or changing a quest should s
 Current quest groups:
 
 - normal entry quests: sport, books, piano, diary, AI project
-- AI-graded writing quests: English, Finnish
-- AI-generated reading quests: Chinese, Swedish, French, English Reading, Finnish Reading
+- AI-reviewed writing quests: English and Finnish
+- AI-generated reading quests: Chinese, Swedish, French, English Reading
+- Finnish Fluency: one persisted daily passage, three timed full rereads, and server-calculated correct-words-per-minute tracking
 - AI-generated problem quests: Math, Science
 - word-pairing games: English-Finnish, English-Chinese, English-Swedish, English-French
 
@@ -65,11 +74,19 @@ Relevant files:
 - `lib/ai/prompts.ts`
 - `app/api/entries/*/route.ts`
 
-Writing feedback should include recent same-language writing history where available. The intended behavior is:
+English writing feedback should include recent same-language writing history where available. Finnish writing feedback should include the previous three entries and:
 
 - fetch the last 3 previous entries for the same language
 - pass those previous entries plus the current writing to the AI prompt
-- ask the AI to compare progress, not repeat generic feedback
+- identify exact phrases to correct and explain one useful writing pattern
+- avoid scores and unsupported claims about progress
+
+Finnish Fluency should:
+
+- create one saved passage per learner and date, so refreshes reuse it
+- avoid recently used topics without sending old article text to the AI
+- save three complete reads in order, calculate words-correct-per-minute on the server, and award quest points only after all three reads and at least 15 minutes are recorded
+- show the learner's recent personal results without mapping them to school screening levels
 
 ### Word-Pairing Scoring
 
@@ -164,6 +181,8 @@ Coverage:
 - word-pairing registry capability flags
 - reward route registry whitelist usage
 - daily/admin UI registry dependency
+- Finnish fluency rate calculation and invalid-attempt rejection
+- Finnish writing prompt avoids numeric grading
 
 ### E2E Regression Harness
 
@@ -177,6 +196,8 @@ Coverage:
 - word-pairing perfect-only XP
 - word-pairing difficulty passed to initial and next rounds
 - reading difficulty loaded from `track_settings`
+- Finnish Fluency draft reuse, three-attempt validation, and recent personal history
+- Finnish writing feedback gives concrete corrections without a numeric score
 - AI routes use configured model
 - key UI/reward paths use centralized quest metadata
 
@@ -198,6 +219,7 @@ Expected current result:
 - TypeScript typecheck passes
 - production build passes
 - Next.js still shows the existing `middleware` deprecation warning
+- current test count: 16 unit tests and 11 E2E regression tests
 
 ## Remaining Plan
 
@@ -211,6 +233,8 @@ To move beyond `7/10`, prioritize these in order:
 6. Replace non-null environment assertions with explicit startup/runtime validation.
 
 ## Development
+
+For a database that has already run migrations 001-011, apply `db/migrate_012.ts` before using the Finnish fluency flow.
 
 Install dependencies:
 

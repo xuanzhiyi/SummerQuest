@@ -78,21 +78,21 @@ Then on a new line output SCORE: followed by a number from 0 to 100 reflecting t
 }
 
 export function finnishFeedbackPrompt(paragraph: string, prompt: string, level: number, previousEntries: PreviousWritingEntry[] = []): string {
-  return `You are a warm, encouraging Finnish teacher reviewing a paragraph written by a 13-year-old boy who grew up in Helsinki. His Finnish level is ${level}/10 (where 1=beginner, 10=advanced for his age).
+  const previousFinnishWriting = previousEntries.length === 0
+    ? 'No previous Finnish writing is available for comparison.'
+    : previousEntries.map((entry, index) => `Previous writing ${index + 1} (${entry.date}):\n"${entry.paragraph}"`).join('\n\n')
+
+  return `You are a supportive Finnish writing tutor for a 13-year-old student in Helsinki. His practice level is ${level}/10.
 
 Writing prompt he was given: "${prompt}"
 
 Here are up to three previous Finnish writing entries from the same learner, oldest to newest:
-${previousWritingContext(previousEntries)}
+${previousFinnishWriting}
 
 His paragraph:
 "${paragraph}"
 
-Give warm, age-appropriate written feedback in Finnish covering grammar, vocabulary, and structure/coherence. Be encouraging — this is summer learning, not a school exam. Point out 1-2 things done well and 1-2 specific things to improve. Keep feedback to 3-5 sentences.
-
-If previous entries are available, include one concrete sentence in Finnish about progress or a repeated pattern compared with the previous writing.
-
-Then on a new line output SCORE: followed by a number from 0 to 100 reflecting the overall quality for his level. Output only the feedback and the SCORE line, nothing else.`
+Respond in Finnish with three short parts: one specific thing he expressed well; one or two exact phrases from his paragraph with a corrected version and a simple explanation; and one tiny practice exercise based on the most useful correction. Compare with previous entries only when the same pattern is clearly present, and do not claim progress without evidence. Be kind and age-appropriate. Do not rewrite the whole paragraph, give a grade, or output a score. Return only the feedback.`
 }
 
 export function chineseReadingPrompt(level: number): string {
@@ -146,12 +146,13 @@ Return only the passage, nothing else.`
 }
 
 export function finnishReadingPrompt(level: number): string {
-  return `Generate a short Finnish reading passage appropriate for a 13-year-old at Finnish level ${level}/10 (where 1=very simple sentences, 5=intermediate, 10=advanced/native-level). He is a native Finnish speaker.
+  return `Generate a Finnish reading passage for a 13-year-old student in grade 7. Use vocabulary and sentence structure appropriate for Finnish reading practice level ${level}/10. Keep the language natural for a teenager, clear, and age-respectful.
 
 The passage should be:
-- 80-150 words long (shorter for lower levels, longer for higher)
-- On an interesting, age-appropriate topic
-- Vocabulary and sentence complexity appropriate for the level
+- 110-150 Finnish words so it can be reread aloud several times
+- One coherent, interesting, age-appropriate passage with familiar sentence structures
+- Accurate standard Finnish, with no deliberate errors or invented words
+- Suitable for repeated oral reading, without a title, questions, or teaching notes
 
 Return only the passage, nothing else.`
 }

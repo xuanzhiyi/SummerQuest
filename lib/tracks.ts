@@ -51,7 +51,7 @@ export const QUEST_DEFINITIONS: QuestDefinition[] = [
   { track: 'english', settingsTrack: 'english', table: 'entries_english', code: 'EN', label: 'English', title: 'English Writing', category: 'Mind', hasLevel: true, aiGraded: true },
   { track: 'english-reading', settingsTrack: 'english_reading', table: 'entries_english_reading', code: 'EN-R', label: 'English Reading', title: 'English Reading', category: 'Mind', hasLevel: true },
   { track: 'finnish', settingsTrack: 'finnish', table: 'entries_finnish', code: 'FI', label: 'Finnish', title: 'Finnish Writing', category: 'Mind', hasLevel: true, aiGraded: true },
-  { track: 'finnish-reading', settingsTrack: 'finnish_reading', table: 'entries_finnish_reading', code: 'FI-R', label: 'Finnish Reading', title: 'Finnish Reading', category: 'Mind', hasLevel: true },
+  { track: 'finnish-reading', settingsTrack: 'finnish_reading', table: 'entries_finnish_reading', code: 'FI-R', label: 'Finnish Fluency', title: 'Finnish Fluency', category: 'Mind', hasLevel: true },
   { track: 'science', settingsTrack: 'science', table: 'entries_science', code: 'SCI', label: 'Science', title: 'Science', category: 'Mind', hasLevel: true, aiGraded: true },
   { track: 'ai_project', settingsTrack: 'ai_project', table: 'entries_ai_project', code: 'AI', label: 'AI Project', title: 'AI Project', category: 'Mind' },
   { track: 'diary', settingsTrack: 'diary', table: 'entries_diary', code: 'DY', label: 'Diary', title: 'Diary', category: 'Mind', editWindowDays: 4 },

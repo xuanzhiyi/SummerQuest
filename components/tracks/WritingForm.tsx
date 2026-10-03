@@ -29,6 +29,7 @@ export default function WritingForm({ date, track, onSaved }: Props) {
 
   const characterCount = writingCharacterCount(paragraph)
   const hasMinimumLength = characterCount >= MIN_WRITING_CHARACTERS
+  const isFinnish = track === 'finnish'
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -55,7 +56,7 @@ export default function WritingForm({ date, track, onSaved }: Props) {
     return (
       <div className="pt-3 space-y-3">
         <div className="bg-green-50 rounded-lg p-3 text-sm">
-          <p className="text-xs font-semibold text-green-700 mb-1">Feedback ✨</p>
+          <p className="text-xs font-semibold text-green-700 mb-1">{isFinnish ? 'Finnish writing practice' : 'Feedback'}</p>
           <p className="text-gray-700 whitespace-pre-wrap">{result.feedback}</p>
         </div>
         <button
@@ -72,7 +73,7 @@ export default function WritingForm({ date, track, onSaved }: Props) {
     <form onSubmit={handleSubmit} className="pt-3 space-y-3">
       <div>
         <div className="flex items-center justify-between mb-1">
-          <label className="block text-xs font-medium text-gray-500">Writing prompt</label>
+          <label className="block text-xs font-medium text-gray-500">{isFinnish ? 'Finnish writing prompt' : 'Writing prompt'}</label>
           <button
             type="button"
             onClick={() => {
@@ -89,7 +90,7 @@ export default function WritingForm({ date, track, onSaved }: Props) {
       </div>
       <div>
         <div className="flex items-center justify-between mb-1">
-          <label className="block text-xs font-medium text-gray-500">Your writing</label>
+          <label className="block text-xs font-medium text-gray-500">{isFinnish ? 'Write in Finnish' : 'Your writing'}</label>
           <span className={`text-xs ${hasMinimumLength ? 'text-green-600' : 'text-gray-400'}`}>
             {characterCount}/{MIN_WRITING_CHARACTERS} characters
           </span>
@@ -109,7 +110,7 @@ export default function WritingForm({ date, track, onSaved }: Props) {
         disabled={loading || !hasMinimumLength}
         className="w-full bg-amber-400 hover:bg-amber-500 disabled:opacity-50 text-white font-semibold rounded-lg py-2 text-sm transition-colors"
       >
-        {loading ? 'Submitting… (AI grading 🤔)' : 'Submit writing ✓'}
+        {loading ? (isFinnish ? 'Getting specific writing feedback…' : 'Submitting… (AI grading 🤔)') : (isFinnish ? 'Get Finnish feedback' : 'Submit writing ✓')}
       </button>
     </form>
   )

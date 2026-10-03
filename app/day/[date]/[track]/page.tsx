@@ -22,7 +22,7 @@ const TRACK_INFO: Record<string, { title: string; description: string; code: str
   swedish: { title: 'Swedish', description: 'Read an AI-generated Swedish text.', code: 'SE' },
   french: { title: 'French', description: 'Read an AI-generated French text.', code: 'FR' },
   'english-reading': { title: 'English Reading', description: 'Read an AI-generated English passage aloud.', code: 'EN-R' },
-  'finnish-reading': { title: 'Finnish Reading', description: 'Read an AI-generated Finnish passage aloud.', code: 'FI-R' },
+  'finnish-reading': { title: 'Finnish Fluency', description: 'Reread the same Finnish passage aloud three times and record correct words per minute.', code: 'FI-R' },
   science: { title: 'Science', description: 'Explore a science problem set.', code: 'SCI' },
   ai_project: { title: 'AI Project', description: 'Document your AI project.', code: 'AI' },
   word_english_finnish: { title: 'Finnish Words', description: 'Match English-Finnish word pairs.', code: 'FI-W' },

@@ -51,8 +51,11 @@ export const READING_TOPICS = [
   'a plan to make school lunches better',
 ]
 
-export function randomReadingTopic(): string {
-  return READING_TOPICS[Math.floor(Math.random() * READING_TOPICS.length)]
+export function randomReadingTopic(excludedTopics: string[] = []): string {
+  const recentTopics = new Set(excludedTopics)
+  const availableTopics = READING_TOPICS.filter((topic) => !recentTopics.has(topic))
+  const topics = availableTopics.length > 0 ? availableTopics : READING_TOPICS
+  return topics[Math.floor(Math.random() * topics.length)]
 }
 
 export function withReadingTopic(basePrompt: string, topic = randomReadingTopic()): string {
