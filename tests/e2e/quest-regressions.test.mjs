@@ -209,7 +209,7 @@ test('quest metadata is centralized for key UI and reward paths', async () => {
 
   assert.match(registry, /export const QUEST_DEFINITIONS/)
   assert.match(registry, /getEntryTableForSettingsTrack/)
-  assert.match(dayDetail, /QUEST_DEFINITIONS/)
+  assert.match(dayDetail, /getQuestsForDate/)
   assert.doesNotMatch(dayDetail, /const ALL_QUESTS = \[/)
   assert.match(settingsForm, /getQuestBySettingsTrack/)
   assert.doesNotMatch(settingsForm, /const HAS_LEVEL = new Set/)
@@ -217,6 +217,21 @@ test('quest metadata is centralized for key UI and reward paths', async () => {
   assert.doesNotMatch(rewardsQueue, /const TRACK_LABELS/)
   assert.match(rewardRequest, /getEntryTableForSettingsTrack\(track\)/)
   assert.doesNotMatch(rewardRequest, /const tableByTrack/)
+})
+
+test('future hidden quests are omitted from daily progress and direct future links', async () => {
+  const registry = await source('lib/tracks.ts')
+  const dayDetail = await source('components/calendar/DayDetail.tsx')
+  const calendarGrid = await source('components/calendar/CalendarGrid.tsx')
+  const dayPage = await source('app/day/[date]/page.tsx')
+  const questPage = await source('app/day/[date]/[track]/page.tsx')
+
+  assert.match(registry, /hideOnFutureDates\?: boolean/)
+  assert.match(dayDetail, /getQuestsForDate\(date\)/)
+  assert.match(calendarGrid, /getQuestsForDate\(tile\.date\)/)
+  assert.match(dayPage, /getQuestsForDate\(date\)/)
+  assert.match(questPage, /isQuestAvailableOnDate\(track, date\)/)
+  assert.match(registry, /FUTURE_QUESTS_HIDDEN_FROM = '2026-10-05'/)
 })
 
 test('login is scoped by remembered family code', async () => {

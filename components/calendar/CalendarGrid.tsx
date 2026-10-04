@@ -4,7 +4,8 @@ import { useState } from 'react'
 import type React from 'react'
 import Link from 'next/link'
 import { signOut } from 'next-auth/react'
-import { type DayTile, TOTAL_QUESTS } from '@/types'
+import { type DayTile } from '@/types'
+import { getQuestsForDate } from '@/lib/tracks'
 
 interface Props {
   tiles: DayTile[]
@@ -27,7 +28,7 @@ function getDowIndex(date: string) {
 }
 
 export default function CalendarGrid({ tiles, role, name, perfectThreshold }: Props) {
-  const perfectGoal = perfectThreshold ?? TOTAL_QUESTS
+  const perfectGoal = (date: string) => perfectThreshold ?? getQuestsForDate(date).length
   const months = [...new Set(tiles.map(t => t.date.slice(0, 7)))].sort()
   const initialMonth = months.find(m => m === TODAY.slice(0, 7)) ?? months[0] ?? TODAY.slice(0, 7)
   const [activeMonth, setActiveMonth] = useState(initialMonth)
@@ -38,7 +39,7 @@ export default function CalendarGrid({ tiles, role, name, perfectThreshold }: Pr
   const monthTiles = tiles.filter(t => t.date.startsWith(activeMonth))
 
   const pastTiles = tiles.filter(t => !isFuture(t.date))
-  const perfectDays = pastTiles.filter(t => t.completed_quests >= perfectGoal).length
+  const perfectDays = pastTiles.filter(t => t.completed_quests >= perfectGoal(t.date)).length
   const totalXP = pastTiles.reduce((s, t) => s + t.total_points, 0)
   const totalQuestsDone = pastTiles.reduce((s, t) => s + t.completed_quests, 0)
 
@@ -122,7 +123,7 @@ export default function CalendarGrid({ tiles, role, name, perfectThreshold }: Pr
             <div key={wi} style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 6 }}>
               {wk.map((tile, ci) =>
                 tile
-                  ? <DayCell key={tile.date} tile={tile} perfectGoal={perfectGoal} />
+                  ? <DayCell key={tile.date} tile={tile} perfectGoal={perfectGoal(tile.date)} />
                   : <div key={`e-${wi}-${ci}`} />
               )}
             </div>
@@ -202,7 +203,7 @@ function DayCell({ tile, perfectGoal }: { tile: DayTile; perfectGoal: number }) 
       </span>
       {done > 0 && !future && (
         <span style={{ fontSize: 8, fontWeight: 700, color, opacity: 0.85, marginTop: 2 }}>
-          {done}/{TOTAL_QUESTS}
+          {done}/{getQuestsForDate(tile.date).length}
         </span>
       )}
     </div>

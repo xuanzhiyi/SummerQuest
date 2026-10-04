@@ -43,6 +43,7 @@ Do not add new local hard-coded maps for:
 - level support
 - AI-graded support
 - word-pairing daily target or point-cap behavior
+- future-day quest visibility
 
 When adding or changing a quest, start in `lib/tracks.ts`, then update route/UI/database code only where necessary.
 
@@ -88,6 +89,12 @@ Rewards:
 - Reward eligibility should use awarded points, not entry count multiplied by current settings.
 - Dynamic SQL table interpolation must go through the registry whitelist first.
 
+Quest visibility:
+
+- Keep future-day visibility in `lib/tracks.ts`; do not remove or rewrite historical quest records.
+- Math, Sport, Piano, and all word-pairing tracks are hidden for dates from 2026-10-05 onward. Earlier dates retain the full quest set.
+- Day views and calendar completion denominators must use the date-specific quest set.
+
 ## Validation Commands
 
 Run these after meaningful code changes:
@@ -102,7 +109,7 @@ npm.cmd run build
 
 Current expected status:
 
-- `npm.cmd test` passes with 16 unit tests and 11 E2E regression tests.
+- `npm.cmd test` passes with 17 unit tests and 12 E2E regression tests.
 - `npm.cmd run typecheck` passes.
 - `npm.cmd run build` passes, with the existing Next.js middleware deprecation warning.
 

@@ -5,6 +5,7 @@ import { MIN_WRITING_CHARACTERS, validateWritingLength, writingCharacterCount } 
 import { READING_TOPICS, randomReadingTopic, withReadingTopic } from '../../lib/reading-topics.ts'
 import { createFluencyAttempt, isValidFluencyAttempt, isValidFluencyAttempts } from '../../lib/finnish-fluency.ts'
 import { finnishFeedbackPrompt } from '../../lib/ai/prompts.ts'
+import { getQuestsForDate, isQuestAvailableOnDate, QUEST_DEFINITIONS } from '../../lib/tracks.ts'
 
 const root = new URL('../../', import.meta.url)
 const tests = []
@@ -111,6 +112,28 @@ test('quest registry has unique tracks and settings keys', async () => {
   assert.ok(settingsMatches.includes('finnish_reading'))
 })
 
+test('dates from the cutoff hide selected quests while existing dates keep the full registry', () => {
+  const existingQuests = getQuestsForDate('2026-10-04')
+  const futureQuests = getQuestsForDate('2026-10-05')
+  const hiddenTracks = new Set([
+    'math', 'sport', 'piano',
+    'word_english_finnish', 'word_english_chinese', 'word_english_swedish', 'word_english_french',
+  ])
+
+  assert.equal(getQuestsForDate('2026-06-26').length, QUEST_DEFINITIONS.length)
+  assert.equal(existingQuests.length, QUEST_DEFINITIONS.length)
+  assert.equal(futureQuests.length, QUEST_DEFINITIONS.length - hiddenTracks.size)
+  assert.deepEqual(
+    new Set(QUEST_DEFINITIONS.filter((quest) => quest.hideOnFutureDates).map((quest) => quest.track)),
+    hiddenTracks,
+  )
+  for (const track of hiddenTracks) {
+    assert.equal(isQuestAvailableOnDate(track, '2026-10-04'), true)
+    assert.equal(isQuestAvailableOnDate(track, '2026-10-05'), false)
+  }
+  assert.equal(isQuestAvailableOnDate('finnish-reading', '2026-10-05'), true)
+})
+
 test('quest registry keeps word-pairing tracks capability-complete and table-free', async () => {
   const registry = await source('lib/tracks.ts')
   const entries = registry.match(/\{ track: 'word_[^}]+\}/g) ?? []
@@ -143,7 +166,7 @@ test('daily and admin quest UIs depend on the central quest registry', async () 
     await source('components/ProgressView.tsx'),
   ]
 
-  assert.match(files[0], /QUEST_DEFINITIONS/)
+  assert.match(files[0], /getQuestsForDate/)
   assert.match(files[1], /getQuestBySettingsTrack/)
   assert.match(files[2], /TRACK_LABELS/)
   assert.match(files[3], /TRACK_LABELS/)

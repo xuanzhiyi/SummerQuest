@@ -33,21 +33,22 @@ export interface QuestDefinition {
   hasDailyTarget?: boolean
   hasPointCap?: boolean
   wordPairing?: boolean
+  hideOnFutureDates?: boolean
   editWindowDays?: number
 }
 
 export const QUEST_DEFINITIONS: QuestDefinition[] = [
-  { track: 'sport', settingsTrack: 'sport', table: 'entries_sport', code: 'RUN', label: 'Sport', title: 'Sport', category: 'Active' },
-  { track: 'math', settingsTrack: 'math', table: 'entries_math', code: '123', label: 'Math', title: 'Math', category: 'Mind', hasLevel: true, aiGraded: true },
+  { track: 'sport', settingsTrack: 'sport', table: 'entries_sport', code: 'RUN', label: 'Sport', title: 'Sport', category: 'Active', hideOnFutureDates: true },
+  { track: 'math', settingsTrack: 'math', table: 'entries_math', code: '123', label: 'Math', title: 'Math', category: 'Mind', hasLevel: true, aiGraded: true, hideOnFutureDates: true },
   { track: 'books', settingsTrack: 'books', table: 'entries_books', code: 'BK', label: 'Books', title: 'Books', category: 'Mind' },
   { track: 'chinese', settingsTrack: 'chinese', table: 'entries_chinese', code: 'CN', label: 'Chinese', title: 'Chinese Reading', category: 'Mind', hasLevel: true },
   { track: 'swedish', settingsTrack: 'swedish', table: 'entries_swedish', code: 'SE', label: 'Swedish', title: 'Swedish Reading', category: 'Mind', hasLevel: true },
   { track: 'french', settingsTrack: 'french', table: 'entries_french', code: 'FR', label: 'French', title: 'French Reading', category: 'Mind', hasLevel: true },
-  { track: 'word_english_finnish', settingsTrack: 'word_english_finnish', code: 'FI-W', label: 'Finnish words', title: 'Finnish Words', category: 'Mind', hasLevel: true, hasDailyTarget: true, hasPointCap: true, wordPairing: true },
-  { track: 'word_english_chinese', settingsTrack: 'word_english_chinese', code: 'CN-W', label: 'Chinese words', title: 'Chinese Words', category: 'Mind', hasLevel: true, hasDailyTarget: true, hasPointCap: true, wordPairing: true },
-  { track: 'word_english_swedish', settingsTrack: 'word_english_swedish', code: 'SE-W', label: 'Swedish words', title: 'Swedish Words', category: 'Mind', hasLevel: true, hasDailyTarget: true, hasPointCap: true, wordPairing: true },
-  { track: 'word_english_french', settingsTrack: 'word_english_french', code: 'FR-W', label: 'French words', title: 'French Words', category: 'Mind', hasLevel: true, hasDailyTarget: true, hasPointCap: true, wordPairing: true },
-  { track: 'piano', settingsTrack: 'piano', table: 'entries_piano', code: 'PN', label: 'Piano', title: 'Piano', category: 'Mind' },
+  { track: 'word_english_finnish', settingsTrack: 'word_english_finnish', code: 'FI-W', label: 'Finnish words', title: 'Finnish Words', category: 'Mind', hasLevel: true, hasDailyTarget: true, hasPointCap: true, wordPairing: true, hideOnFutureDates: true },
+  { track: 'word_english_chinese', settingsTrack: 'word_english_chinese', code: 'CN-W', label: 'Chinese words', title: 'Chinese Words', category: 'Mind', hasLevel: true, hasDailyTarget: true, hasPointCap: true, wordPairing: true, hideOnFutureDates: true },
+  { track: 'word_english_swedish', settingsTrack: 'word_english_swedish', code: 'SE-W', label: 'Swedish words', title: 'Swedish Words', category: 'Mind', hasLevel: true, hasDailyTarget: true, hasPointCap: true, wordPairing: true, hideOnFutureDates: true },
+  { track: 'word_english_french', settingsTrack: 'word_english_french', code: 'FR-W', label: 'French words', title: 'French Words', category: 'Mind', hasLevel: true, hasDailyTarget: true, hasPointCap: true, wordPairing: true, hideOnFutureDates: true },
+  { track: 'piano', settingsTrack: 'piano', table: 'entries_piano', code: 'PN', label: 'Piano', title: 'Piano', category: 'Mind', hideOnFutureDates: true },
   { track: 'english', settingsTrack: 'english', table: 'entries_english', code: 'EN', label: 'English', title: 'English Writing', category: 'Mind', hasLevel: true, aiGraded: true },
   { track: 'english-reading', settingsTrack: 'english_reading', table: 'entries_english_reading', code: 'EN-R', label: 'English Reading', title: 'English Reading', category: 'Mind', hasLevel: true },
   { track: 'finnish', settingsTrack: 'finnish', table: 'entries_finnish', code: 'FI', label: 'Finnish', title: 'Finnish Writing', category: 'Mind', hasLevel: true, aiGraded: true },
@@ -61,9 +62,21 @@ export const TOTAL_QUESTS = QUEST_DEFINITIONS.length
 export const QUEST_BY_TRACK = Object.fromEntries(QUEST_DEFINITIONS.map((quest) => [quest.track, quest])) as Record<QuestTrack, QuestDefinition>
 export const QUEST_BY_SETTINGS_TRACK = Object.fromEntries(QUEST_DEFINITIONS.map((quest) => [quest.settingsTrack, quest])) as Record<string, QuestDefinition>
 export const TRACK_LABELS = Object.fromEntries(QUEST_DEFINITIONS.map((quest) => [quest.settingsTrack, quest.label])) as Record<string, string>
+// Keep existing days intact; the reduced quest schedule starts the day after this change.
+export const FUTURE_QUESTS_HIDDEN_FROM = '2026-10-05'
 
 export function getQuestByTrack(track: string): QuestDefinition | undefined {
   return QUEST_BY_TRACK[track as QuestTrack]
+}
+
+export function getQuestsForDate(date: string): QuestDefinition[] {
+  if (date < FUTURE_QUESTS_HIDDEN_FROM) return QUEST_DEFINITIONS
+  return QUEST_DEFINITIONS.filter((quest) => !quest.hideOnFutureDates)
+}
+
+export function isQuestAvailableOnDate(track: string, date: string): boolean {
+  const quest = getQuestByTrack(track)
+  return Boolean(quest && (date < FUTURE_QUESTS_HIDDEN_FROM || !quest.hideOnFutureDates))
 }
 
 export function getQuestBySettingsTrack(track: string): QuestDefinition | undefined {

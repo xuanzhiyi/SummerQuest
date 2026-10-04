@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { signOut } from 'next-auth/react'
-import { QUEST_DEFINITIONS, type QuestCategory, type QuestDefinition } from '@/lib/tracks'
+import { getQuestsForDate, type QuestCategory, type QuestDefinition } from '@/lib/tracks'
 
 interface Props {
   date: string
@@ -58,14 +58,15 @@ function completedTime(track: string, entries: Record<string, unknown[]>) {
 export default function DayDetail({ date, entries, canEdit, role, dailyTargets, earnedXP, xpPerTrack, name }: Props) {
   const d = new Date(date + 'T12:00:00')
   const displayDate = d.toLocaleDateString('en', { weekday: 'long', month: 'long', day: 'numeric' })
+  const quests = getQuestsForDate(date)
 
   const getXP = (track: string) => xpPerTrack?.[track] ?? 10
-  const completedCount = QUEST_DEFINITIONS.filter((q) => isDone(q.track, entries, dailyTargets)).length
-  const totalXP = QUEST_DEFINITIONS.reduce((sum, q) => sum + getXP(q.track), 0)
+  const completedCount = quests.filter((q) => isDone(q.track, entries, dailyTargets)).length
+  const totalXP = quests.reduce((sum, q) => sum + getXP(q.track), 0)
   const pct = totalXP > 0 ? Math.min(100, Math.round((earnedXP / totalXP) * 100)) : 0
 
-  const pending = QUEST_DEFINITIONS.filter((q) => !isDone(q.track, entries, dailyTargets))
-  const completed = QUEST_DEFINITIONS.filter((q) => isDone(q.track, entries, dailyTargets))
+  const pending = quests.filter((q) => !isDone(q.track, entries, dailyTargets))
+  const completed = quests.filter((q) => isDone(q.track, entries, dailyTargets))
 
   const circumference = 2 * Math.PI * 27
   const ringDasharray = `${(pct / 100) * circumference} ${circumference}`
@@ -134,7 +135,7 @@ export default function DayDetail({ date, entries, canEdit, role, dailyTargets, 
           }}>
             <span style={{ width: 7, height: 7, borderRadius: '50%', background: ACCENT, boxShadow: `0 0 10px ${ACCENT}` }} />
             <span style={{ fontSize: 11, fontWeight: 700, color: '#C7CEE0', letterSpacing: 1 }}>
-              {completedCount}/{QUEST_DEFINITIONS.length} DONE
+              {completedCount}/{quests.length} DONE
             </span>
           </div>
         </div>
@@ -161,7 +162,7 @@ export default function DayDetail({ date, entries, canEdit, role, dailyTargets, 
           <div className="flex justify-between items-start" style={{ marginBottom: 18 }}>
             <div>
               <p style={{ fontSize: 11, fontWeight: 700, color: '#6B7793', textTransform: 'uppercase', letterSpacing: 2, margin: '0 0 6px' }}>
-                Today's XP
+                Today&apos;s XP
               </p>
               <p style={{ margin: 0, lineHeight: 1, display: 'flex', alignItems: 'baseline', gap: 6 }}>
                 <span style={{ fontFamily: "'Space Grotesk', sans-serif", fontSize: 40, fontWeight: 700, color: ACCENT }}>{earnedXP}</span>
@@ -196,7 +197,7 @@ export default function DayDetail({ date, entries, canEdit, role, dailyTargets, 
             }} />
           </div>
           <p style={{ fontSize: 12, color: '#6B7793', fontWeight: 700, margin: 0 }}>
-            {completedCount} of {QUEST_DEFINITIONS.length} quests done today
+            {completedCount} of {quests.length} quests done today
             {canEdit && ' - keep going!'}
           </p>
         </div>

@@ -40,6 +40,7 @@ The registry owns:
 - display label and card code
 - category
 - capability flags such as `hasLevel`, `aiGraded`, `hasDailyTarget`, `hasPointCap`, and `wordPairing`
+- future-date visibility
 
 Consumers should import from the registry instead of creating local maps:
 
@@ -62,6 +63,8 @@ Current quest groups:
 - Finnish Fluency: one persisted daily passage, three timed full rereads, and server-calculated correct-words-per-minute tracking
 - AI-generated problem quests: Math, Science
 - word-pairing games: English-Finnish, English-Chinese, English-Swedish, English-French
+
+From 2026-10-05 onward, Math, Sport, Piano, and all word-pairing quests are hidden from daily quest views. Dates before the cutoff retain the original quest set; daily and calendar completion counts use each date's applicable quest total.
 
 ### AI Model Configuration
 
@@ -219,7 +222,7 @@ Expected current result:
 - TypeScript typecheck passes
 - production build passes
 - Next.js still shows the existing `middleware` deprecation warning
-- current test count: 16 unit tests and 11 E2E regression tests
+- current test count: 17 unit tests and 12 E2E regression tests
 
 ## Remaining Plan
 

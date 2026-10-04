@@ -1,6 +1,7 @@
 import { redirect, notFound } from 'next/navigation'
 import { auth } from '@/lib/auth'
-import { isToday, isPast, PROGRAM_START, todayDate } from '@/lib/calendar'
+import { isToday, PROGRAM_START, todayDate } from '@/lib/calendar'
+import { getQuestsForDate } from '@/lib/tracks'
 import sql from '@/lib/db'
 import DayDetail from '@/components/calendar/DayDetail'
 
@@ -17,9 +18,11 @@ export default async function DayPage({ params }: Props) {
   if (date < PROGRAM_START) notFound()
 
   const role = session.user.role
-  if (role === 'child' && date > todayDate()) {
+  const currentDate = todayDate()
+  if (role === 'child' && date > currentDate) {
     redirect('/')
   }
+  const quests = getQuestsForDate(date)
 
   // Guardian views their first linked child's data
   let userId = parseInt(session.user.id)
@@ -59,7 +62,7 @@ export default async function DayPage({ params }: Props) {
     wpByPair[key] = [...(wpByPair[key] ?? []), row]
   }
 
-  const entries = {
+  const entries: Record<string, unknown[]> = {
     books: books as unknown[],
     english: english as unknown[],
     finnish: finnish as unknown[],
@@ -81,11 +84,7 @@ export default async function DayPage({ params }: Props) {
   function sumPoints(rows: unknown[]) {
     return rows.reduce((acc: number, r: unknown) => acc + (Number((r as Record<string, unknown>).points_awarded) || 0), 0)
   }
-  const earnedXP =
-    sumPoints(books) + sumPoints(english) + sumPoints(finnish) + sumPoints(chinese) +
-    sumPoints(swedish) + sumPoints(french) + sumPoints(englishReading) + sumPoints(finnishReading) +
-    sumPoints(math) + sumPoints(science) +
-    sumPoints(aiProject) + sumPoints(sport) + sumPoints(piano) + sumPoints(diary) + sumPoints(wordPairing)
+  const earnedXP = quests.reduce((sum, quest) => sum + sumPoints(entries[quest.track] ?? []), 0)
 
   const dailyTargets: Record<string, number> = {}
   for (const row of wordTargets) {
